@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>albiruni - Eksplorasi Waktu Salat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SortableJS untuk Drag & Drop Level 1 -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Nunito', 'sans-serif'] },
+                    colors: {
+                        space: { 900: '#0B0B1A', 800: '#141432', 700: '#1D1D4A', 600: '#262662', 500: '#34347A' },
+                        star: { 300: '#FACC15', 400: '#FACC15', 500: '#EAB308' },
+                        accent: { subuh: '#38BDF8', zuhur: '#FDE047', asar: '#FB923C', magrib: '#F43F5E', isya: '#8B5CF6', extreme: '#EF4444' }
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-in': 'bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                        'shake': 'shake 0.4s ease-in-out',
+                    },
+                    keyframes: {
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+                        bounceIn: { '0%': { transform: 'scale(0.5)', opacity: 0 }, '100%': { transform: 'scale(1)', opacity: 1 } },
+                        shake: { '0%, 100%': { transform: 'translateX(0)' }, '25%': { transform: 'translateX(-5px)' }, '75%': { transform: 'translateX(5px)' } }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #151527 0%, #1D1D4A 100%);
+            color: white;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #canvas-stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .glass-panel {
+            background: rgba(85, 53, 53, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Memory Card 3D Flip Styles */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        .memory-card {
+            cursor: pointer;
+        }
+
+        .memory-card.flipped {
+            cursor: default;
+        }
+
+        .memory-card.flipped .memory-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .memory-card.matched .rotate-y-180 {
+            animation: pulse-glow 1s ease-in-out infinite alternate;
+            border-color: #4ADE80;
+            box-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
+        }
+
+        @keyframes pulse-glow {
+            from {
+                box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+            }
+
+            to {
+                box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .level-node {
+            z-index: 10;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .level-node:active {
+            transform: scale(0.95);
+        }
+
+        .btn-game {
+            transition: all 0.2s;
+        }
+
+        .btn-game:active {
+            transform: scale(0.95) translateY(2px);
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased text-gray-100">
+
+    <canvas id="canvas-stars"></canvas>
+
+    <!-- FLOATING MUSIC TOGGLE -->
+    <div class="fixed top-4 right-4 z-50 flex items-center gap-2 glass-panel px-3 py-1.5 rounded-full">
+        <button onclick="SoundManager.toggleMusic()" id="music-toggle-btn"
+            class="text-cyan-400 hover:text-white flex items-center gap-2 text-xs font-bold">
+            <i class="fas fa-volume-mute text-sm" id="music-icon"></i> <span id="music-label">Musik: Off</span>
+        </button>
+    </div>
+
+    <!-- SCREEN: HOME -->
+    <div id="screen-home" class="screen active items-center justify-center p-6">
+        <div
+            class="glass-panel rounded-3xl p-8 max-w-md w-full text-center flex flex-col items-center animate-bounce-in">
+            <div
+                class="w-32 h-32 bg-space-600 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(139,92,246,0.5)] border-4 border-space-500 relative">
+                <i class="fas fa-user-astronaut text-6xl text-white"></i>
+                <div
+                    class="absolute -right-2 -top-2 bg-star-400 rounded-full w-8 h-8 flex items-center justify-center animate-pulse">
+                    <i class="fas fa-star text-white text-sm"></i>
+                </div>
+            </div>
+
+            <h1
+                class="text-4xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 tracking-wider">
+                ALBIRUNI</h1>
+            <p class="text-space-200 mb-8 text-sm uppercase tracking-widest opacity-80">Belajar Waktu Salat</p>
+
+            <div class="w-full mb-6 relative">
+                <i class="fas fa-user absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="player-name-input" placeholder="Masukkan Namamu"
+                    class="w-full bg-space-800 border border-space-600 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-cyan-400 transition-colors text-center font-bold placeholder-gray-500">
+            </div>
+
+            <button onclick="App.startGame()"
+                class="btn-game w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-3 mb-3 border border-cyan-400/30">
+                <i class="fas fa-play"></i> START
+            </button>
+            <button onclick="App.showScreen('map')"
+                class="btn-game w-full bg-space-700 hover:bg-space-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 mb-3 border border-white/10">
+                <i class="fas fa-map-marked-alt text-star-400"></i> ORBIT LEVEL
+            </button>
+            <button onclick="App.resetDataConfirm()" class="text-xs text-gray-400 hover:text-white underline mt-2">Hapus
+                Data Tersimpan</button>
+        </div>
+    </div>
+
+    <!-- SCREEN: LEVEL MAP -->
+    <div id="screen-map" class="screen relative items-center justify-center">
+        <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-center glass-panel z-45 rounded-b-2xl">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 bg-space-700 rounded-full flex items-center justify-center border border-space-500">
+                    <i class="fas fa-user-astronaut"></i>
+                </div>
+                <div>
+                    <div id="map-player-name" class="font-bold text-sm">Player</div>
+                    <div class="text-xs text-star-400 font-bold"><i class="fas fa-star"></i> <span
+                            id="map-total-stars">0</span></div>
+                </div>
+            </div>
+            <button onclick="App.showScreen('home')"
+                class="w-10 h-10 bg-space-700 rounded-full flex items-center justify-center hover:bg-space-600 border border-space-500"><i
+                    class="fas fa-home"></i></button>
+        </div>
+
+        <div class="w-full max-w-lg h-full relative py-24 px-4 overflow-y-auto hide-scrollbar flex flex-col items-center"
+            id="map-container">
+            <div class="text-center opacity-50 mb-10 text-sm italic">Orbit Level</div>
+        </div>
+    </div>
+
+    <!-- SCREEN: MATERIAL -->
+    <div id="screen-material" class="screen items-center justify-center p-4">
+        <div
+            class="glass-panel rounded-2xl w-full max-w-2xl h-[80vh] flex flex-col relative overflow-hidden shadow-2xl">
+            <div class="p-4 border-b border-white/10 flex justify-between items-center bg-space-800/80">
+                <h2 id="material-title" class="font-bold text-xl text-cyan-400"><i class="fas fa-book-open mr-2"></i>
+                    Log Pengamatan</h2>
+                <button onclick="App.startCurrentLevelGame()" class="text-gray-400 hover:text-white"><i
+                        class="fas fa-times text-xl"></i></button>
+            </div>
+
+            <div class="flex-1 p-6 overflow-y-auto" id="material-content-area"></div>
+
+            <div class="p-4 border-t border-white/10 bg-space-800/80 flex justify-between items-center">
+                <div class="flex gap-2" id="material-dots"></div>
+                <div class="flex gap-2">
+                    <button id="btn-prev-slide" onclick="App.prevSlide()"
+                        class="btn-game px-4 py-2 bg-space-600 rounded-lg hidden">Kembali</button>
+                    <button id="btn-next-slide" onclick="App.nextSlide()"
+                        class="btn-game px-6 py-2 bg-cyan-600 rounded-lg font-bold">Lanjut</button>
+                    <button id="btn-start-from-material" onclick="App.startCurrentLevelGame()"
+                        class="btn-game px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg font-bold hidden shadow-lg shadow-green-500/30">Mulai
+                        Game</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN: GAME -->
+    <div id="screen-game" class="screen flex-col">
+        <div
+            class="glass-panel p-3 px-4 md:px-6 flex justify-between items-center sticky top-0 z-40 border-b border-white/10">
+            <div class="flex items-center gap-4">
+                <button onclick="App.showScreen('map')"
+                    class="w-10 h-10 bg-space-700/50 rounded-full flex items-center justify-center hover:bg-space-600 border border-white/10"><i
+                        class="fas fa-arrow-left"></i></button>
+                <div>
+                    <div id="game-level-title"
+                        class="font-bold text-lg md:text-xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 uppercase tracking-wide">
+                        Level 1</div>
+                    <div class="text-xs text-gray-400">Score: <span id="game-score"
+                            class="font-bold text-white transition-all">0</span></div>
+                </div>
+            </div>
+            <div class="flex gap-1" id="game-lives"></div>
+        </div>
+
+        <div class="flex-1 relative flex flex-col items-center justify-center p-4 py-8" id="game-board-container"></div>
+    </div>
+
+    <!-- OVERLAYS / MODALS -->
+    <div id="modal-overlay"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+
+        <!-- Generic Message Modal -->
+        <div id="modal-message"
+            class="hidden glass-panel rounded-2xl p-6 max-w-sm w-[90%] text-center transform scale-90 transition-transform duration-300">
+            <div id="msg-icon" class="text-4xl mb-4"></div>
+            <h3 id="msg-title" class="text-xl font-bold mb-2"></h3>
+            <p id="msg-text" class="text-gray-300 mb-6 text-sm"></p>
+            <button id="msg-btn" class="btn-game w-full bg-cyan-600 py-3 rounded-xl font-bold">OK</button>
+        </div>
+
+        <!-- Ready Confirmation Modal (Memory Card Preview) -->
+        <div id="modal-ready"
+            class="hidden glass-panel border border-cyan-500/50 rounded-3xl p-8 max-w-md w-[95%] text-center transform scale-90 transition-transform duration-300">
+            <div
+                class="w-16 h-16 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-cyan-400 text-3xl border border-cyan-400/30">
+                <i class="fas fa-brain"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-cyan-400 mb-2">Hafalkan Posisi Kartu!</h3>
+            <p class="text-gray-300 text-sm mb-6">Kartu akan ditampilkan terbuka selama 8 detik. Tekan tombol di bawah
+                jika kamu sudah siap menghafal.</p>
+            <button onclick="App.confirmReadyStart()"
+                class="btn-game w-full bg-gradient-to-r from-cyan-500 to-blue-600 py-4 rounded-xl font-bold shadow-lg text-lg text-white flex items-center justify-center gap-2">
+                <i class="fas fa-play"></i> SAYA SIAP
+            </button>
+        </div>
+
+        <!-- Quiz Modal -->
+        <div id="modal-quiz"
+            class="hidden glass-panel border border-cyan-500/50 rounded-2xl p-6 max-w-md w-[95%] transform scale-90 transition-transform duration-300 relative overflow-hidden shadow-[0_0_30px_rgba(6,182,212,0.3)]">
+            <div class="absolute -top-10 -right-10 text-cyan-500/10 text-9xl"><i class="fas fa-question-circle"></i>
+            </div>
+
+            <div class="flex items-center gap-3 mb-4 relative z-10">
+                <div
+                    class="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-xl shadow-lg border-2 border-white/20">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-cyan-300 font-bold uppercase tracking-wider">Transmisi Masuk</div>
+                    <div class="font-bold">Pertanyaan Falak</div>
+                </div>
+            </div>
+
+            <p id="quiz-question" class="text-lg md:text-xl font-medium mb-6 relative z-10 leading-snug"></p>
+            <div id="quiz-options" class="flex flex-col gap-3 relative z-10"></div>
+        </div>
+
+        <!-- Level Complete Modal -->
+        <div id="modal-complete"
+            class="hidden glass-panel rounded-3xl p-8 max-w-sm w-[90%] text-center border border-green-500/50 shadow-[0_0_40px_rgba(34,197,94,0.3)] transform scale-90 transition-transform duration-300 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-cyan-500"></div>
+            <h2
+                class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-400 mb-2">
+                MISI SELESAI</h2>
+            <p class="text-gray-300 text-sm mb-6">Analisis data berhasil dikumpulkan.</p>
+
+            <div class="flex justify-center gap-2 mb-6" id="complete-stars"></div>
+
+            <div class="bg-space-900/50 rounded-xl p-4 mb-6 border border-white/5">
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-400 text-sm">Score Level:</span>
+                    <span id="complete-score" class="font-bold text-cyan-400">0</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-400 text-sm">Akurasi:</span>
+                    <span id="complete-accuracy" class="font-bold text-green-400">0%</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400 text-sm">Bonus Waktu:</span>
+                    <span id="complete-time-bonus" class="font-bold text-yellow-400">+0</span>
+                </div>
+            </div>
+
+            <button id="btn-next-level-action"
+                class="btn-game w-full bg-gradient-to-r from-green-500 to-emerald-600 py-3 rounded-xl font-bold shadow-lg shadow-green-500/30 text-lg flex items-center justify-center gap-2">
+                Lanjut Level Berikutnya <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- Final Victory Modal (Hari Akhir) - Persistent -->
+        <div id="modal-victory"
+            class="hidden glass-panel border border-yellow-500/50 rounded-3xl p-8 max-w-md w-[95%] text-center transform scale-90 transition-transform duration-300">
+            <div class="text-6xl mb-4 animate-bounce"><i
+                    class="fas fa-trophy text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]"></i></div>
+            <h2
+                class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-2">
+                HARI AKHIR (VICTORY)</h2>
+            <p class="text-gray-300 mb-6 text-sm">Luar biasa! Kamu telah menguasai seluruh materi hingga Ujian Ekstrem
+                Ahli Falak.</p>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-space-800/80 rounded-xl p-4 border border-white/10">
+                    <div class="text-xs text-gray-400 uppercase tracking-wider mb-1">Total Score</div>
+                    <div id="victory-score" class="text-2xl font-bold text-cyan-400">0</div>
+                </div>
+                <div class="bg-space-800/80 rounded-xl p-4 border border-white/10">
+                    <div class="text-xs text-gray-400 uppercase tracking-wider mb-1">Total Bintang</div>
+                    <div class="text-2xl font-bold text-yellow-400 flex items-center justify-center gap-1">
+                        <span id="victory-stars">0</span> <i class="fas fa-star text-sm"></i>
+                    </div>
+                </div>
+                <div class="bg-space-800/80 rounded-xl p-4 border border-white/10">
+                    <div class="text-xs text-gray-400 uppercase tracking-wider mb-1">Jawaban Benar</div>
+                    <div id="victory-correct" class="text-2xl font-bold text-green-400">0</div>
+                </div>
+                <div class="bg-space-800/80 rounded-xl p-4 border border-white/10">
+                    <div class="text-xs text-gray-400 uppercase tracking-wider mb-1">Jawaban Salah</div>
+                    <div id="victory-wrong" class="text-2xl font-bold text-red-400">0</div>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button onclick="App.showScreen('map'); App.hideModal();"
+                    class="btn-game w-full bg-gradient-to-r from-yellow-500 to-orange-500 py-3 rounded-xl font-bold shadow-lg shadow-yellow-500/30 text-gray-900">
+                    <i class="fas fa-home mr-2"></i> Kembali ke Home
+                </button>
+                <button onclick="App.resetDataConfirm()"
+                    class="btn-game w-full bg-space-700 hover:bg-space-600 text-red-400 border border-red-500/30 py-3 rounded-xl font-bold">
+                    <i class="fas fa-trash-alt mr-2"></i> Hapus Semua Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SoundManager = {
+            audioCtx: null,
+            isPlaying: false,
+            timer: null,
+
+            init() {
+                if (!this.audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.audioCtx = new AudioContext();
+                }
+                if (this.audioCtx.state === 'suspended') {
+                    this.audioCtx.resume();
+                }
+            },
+
+            toggleMusic() {
+                this.init();
+                this.isPlaying = !this.isPlaying;
+                const btnIcon = document.getElementById('music-icon');
+                const btnLabel = document.getElementById('music-label');
+
+                if (this.isPlaying) {
+                    btnIcon.className = "fas fa-volume-up text-sm text-green-400";
+                    btnLabel.innerText = "Musik: On";
+                    this.startBGM();
+                } else {
+                    btnIcon.className = "fas fa-volume-mute text-sm";
+                    btnLabel.innerText = "Musik: Off";
+                    this.stopBGM();
+                }
+            },
+
+            startBGM() {
+                if (this.timer) clearInterval(this.timer);
+                // Exciting space synth arpeggio loop
+                const chordProgression = [
+                    [220, 277.18, 329.63, 440], // A minor
+                    [174.61, 220, 261.63, 349.23], // F major
+                    [196, 246.94, 293.66, 392], // G major
+                    [164.81, 207.65, 246.94, 329.63] // E minor
+                ];
+                let beat = 0;
+
+                this.timer = setInterval(() => {
+                    if (!this.isPlaying || !this.audioCtx) return;
+                    try {
+                        const chord = chordProgression[Math.floor(beat / 8) % chordProgression.length];
+                        const freq = chord[beat % chord.length];
+
+                        const osc = this.audioCtx.createOscillator();
+                        const gain = this.audioCtx.createGain();
+
+                        osc.type = (beat % 4 === 0) ? 'triangle' : 'sine';
+                        osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+
+                        gain.gain.setValueAtTime(0.04, this.audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 0.35);
+
+                        osc.connect(gain);
+                        gain.connect(this.audioCtx.destination);
+
+                        osc.start();
+                        osc.stop(this.audioCtx.currentTime + 0.35);
+
+                        beat++;
+                    } catch (e) { }
+                }, 200);
+            },
+
+            stopBGM() {
+                if (this.timer) {
+                    clearInterval(this.timer);
+                    this.timer = null;
+                }
+            }
+        };
+
+        const GameData = {
+            levels: [
+                {
+                    id: 1,
+                    title: "Level 1: Urutkan Waktu",
+                    icon: "fas fa-sort-numeric-down",
+                    color: "#38BDF8",
+                    type: "sort",
+                    hasMaterial: false,
+                    starsThreshold: [300, 450, 550],
+                    items: [
+                        { id: 'subuh', label: 'Subuh', color: 'bg-space-subuh', order: 1 },
+                        { id: 'zuhur', label: 'Zuhur', color: 'bg-space-zuhur', order: 2 },
+                        { id: 'asar', label: 'Asar', color: 'bg-space-asar', order: 3 },
+                        { id: 'magrib', label: 'Magrib', color: 'bg-space-magrib', order: 4 },
+                        { id: 'isya', label: 'Isya', color: 'bg-space-isya', order: 5 }
+                    ],
+                    questions: [
+                        { q: "Salat apakah yang waktunya dimulai setelah matahari terbenam?", options: ["Asar", "Magrib", "Isya", "Subuh"], answer: 1 },
+                        { q: "Salat apakah yang berada setelah Zuhur?", options: ["Subuh", "Isya", "Magrib", "Asar"], answer: 3 }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: "Level 2: Kenali Fenomena",
+                    icon: "fas fa-sun",
+                    color: "#FDE047",
+                    type: "memory",
+                    hasMaterial: true,
+                    starsThreshold: [500, 700, 900],
+                    material: [
+                        { title: "Penentuan Waktu Klasik (Slide 1/2)", content: "Sebelum berkembangnya teknologi modern, waktu salat ditentukan berdasarkan pengamatan terhadap fenomena alam, terutama posisi matahari dan perubahan cahaya di langit." },
+                        { title: "Tanda Fenomena Alam (Slide 2/2)", content: "<ul class='list-disc pl-5 space-y-2 text-sm text-gray-300'><li><b>Subuh:</b> Munculnya fajar shadiq hingga terbitnya matahari.</li><li><b>Zuhur:</b> Sejak matahari tergelincir, sesaat setelah titik kulminasi, hingga masuk asar.</li><li><b>Asar:</b> Berdasarkan posisi dan panjang bayangan benda (dua kali bayangan).</li><li><b>Magrib:</b> Sejak matahari terbenam hingga tibanya waktu isya.</li><li><b>Isya:</b> Sejak hilangnya mega merah sampai separuh malam / fajar kadzib.</li></ul>" }
+                    ],
+                    pairs: [
+                        { id: 'subuh', t1: 'SUBUH', t2: 'FAJAR SHADIQ', color: 'from-blue-600 to-blue-800' },
+                        { id: 'zuhur', t1: 'ZUHUR', t2: 'MATAHARI BERADA DI MERIDIAN', color: 'from-yellow-500 to-yellow-700' },
+                        { id: 'asar', t1: 'ASAR', t2: 'BAYANGAN BENDA DUA KALI', color: 'from-orange-500 to-orange-700' },
+                        { id: 'magrib', t1: 'MAGRIB', t2: 'MATAHARI TERBENAM', color: 'from-red-500 to-red-800' },
+                        { id: 'isya', t1: 'ISYA', t2: 'HILANGNYA MEGA MERAH', color: 'from-purple-600 to-purple-900' }
+                    ],
+                    questions: [
+                        { q: "Tanda alam yang menandakan masuknya waktu salat Subuh adalah?", options: ["Matahari terbenam", "Fajar Shadiq", "Mega merah hilang", "Matahari tergelincir"], answer: 1 },
+                        { q: "Waktu salat apa yang dimulai saat matahari tergelincir dari titik kulminasi?", options: ["Zuhur", "Asar", "Magrib", "Isya"], answer: 0 },
+                        { q: "Faktor penentu utama untuk masuknya waktu salat Asar klasik adalah?", options: ["Cahaya merah di langit", "Terbit fajar", "Posisi bulan", "Panjang bayangan benda"], answer: 3 },
+                        { q: "Salat Magrib dimulai tepat setelah fenomena apa terjadi?", options: ["Matahari mencapai puncak", "Terbit fajar", "Matahari terbenam", "Mega merah hilang"], answer: 2 },
+                        { q: "Waktu salat Isya dimulai sejak hilangnya fenomena apa di ufuk barat?", options: ["Fajar", "Mega merah (Syafaq Ahmar)", "Bintang biduk", "Bayangan benda"], answer: 1 }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: "Level 3: Instrumen Falak",
+                    icon: "fas fa-compass",
+                    color: "#10B981",
+                    type: "memory",
+                    hasMaterial: true,
+                    starsThreshold: [500, 750, 950],
+                    material: [
+                        { title: "Perkembangan Alat Falak", content: "Seiring perkembangan ilmu falak, penentuan waktu salat berkembang dari pengamatan langsung terhadap Matahari hingga penggunaan teknologi digital." },
+                        { title: "Daftar Instrumen", content: "<ul class='list-disc pl-5 space-y-1 text-sm text-gray-300'><li><b>Jam Bancet/Istiwa:</b> Menentukan waktu berdasar arah & panjang bayangan.</li><li><b>Rubu' Mujayyab:</b> Mengukur ketinggian matahari & hitung waktu.</li><li><b>Astrolab:</b> Mengukur posisi/ketinggian benda langit.</li><li><b>Teodolit:</b> Alat optik presisi ukur sudut & posisi matahari.</li><li><b>Software Digital:</b> Olah data astronomis instan.</li></ul>" }
+                    ],
+                    pairs: [
+                        { id: 'astrolab', t1: 'ASTROLAB', t2: 'UNTUK MENGUKUR POSISI ATAU KETINGGIAN BENDA LANGIT', color: 'from-teal-600 to-teal-800' },
+                        { id: 'rubu', t1: 'RUBU MUJAYYAB', t2: 'UNTUK MENGUKUR KETINGGIAN MATAHARI DAN MEMBANTU PERHITUNGAN', color: 'from-emerald-600 to-emerald-800' },
+                        { id: 'jam', t1: 'JAM BANCET / ISTIWA', t2: 'UNTUK MENENTUKAN WAKTU BERDASAR ARAH & PANJANG BAYANGAN', color: 'from-green-600 to-green-800' },
+                        { id: 'teodolit', t1: 'TEODOLIT', t2: 'UNTUK MENGUKUR SUDUT DAN POSISI MATAHARI DENGAN TELITI', color: 'from-cyan-600 to-cyan-800' },
+                        { id: 'software', t1: 'SOFTWARE DIGITAL', t2: 'UNTUK MENGOLAH DATA ASTRONOMIS & MENGHITUNG CEPAT', color: 'from-blue-500 to-indigo-700' }
+                    ],
+                    questions: [
+                        { q: "Alat klasik berbentuk seperempat lingkaran untuk mengukur ketinggian matahari adalah?", options: ["Teodolit", "Rubu' Mujayyab", "Astrolab", "Jam Bancet"], answer: 1 },
+                        { q: "Instrumen mana yang memanfaatkan bayangan matahari secara langsung pada bidang datar?", options: ["Software", "Astrolab", "Teodolit", "Jam Bancet/Istiwa'"], answer: 3 },
+                        { q: "Untuk mengolah ribuan data astronomis penentu waktu salat secara cepat, alat bantu terbaik adalah?", options: ["Astrolab", "Teodolit", "Software Digital", "Rubu'"], answer: 2 },
+                        { q: "Alat optik modern yang sangat presisi untuk mengukur sudut ketinggian matahari disebut?", options: ["Mikroskop", "Teodolit", "Teleskop", "Kamera"], answer: 1 },
+                        { q: "Fungsi utama dari instrumen klasik Astrolab adalah?", options: ["Mengukur posisi/ketinggian benda langit", "Menimbang benda", "Mengukur kecepatan angin", "Melihat mikroba"], answer: 0 }
+                    ]
+                },
+                {
+                    id: 4,
+                    title: "Level 4: Faktor Pengaruh",
+                    icon: "fas fa-globe",
+                    color: "#8B5CF6",
+                    type: "memory",
+                    hasMaterial: true,
+                    starsThreshold: [600, 850, 1100],
+                    material: [
+                        { title: "Faktor Geografis & Astronomis", content: "Perbedaan waktu salat antarwilayah dipengaruhi oleh perbedaan lokasi geografis dan posisi Matahari." },
+                        { title: "Variabel Pengaruh", content: "<ul class='list-disc pl-4 space-y-1 text-xs text-gray-300'><li><b>Lintang tempat:</b> memengaruhi posisi & lama matahari di atas ufuk.</li><li><b>Bujur tempat:</b> menyebabkan perbedaan waktu lokal antarwilayah.</li><li><b>Deklinasi Matahari:</b> posisi matahari yang berubah sepanjang tahun.</li><li><b>Equation of Time:</b> memengaruhi selisih waktu matahari dan jam.</li><li><b>Ketinggian tempat:</b> memengaruhi kerendahan ufuk & terbit/terbenam.</li><li><b>Tinggi Matahari (h₀):</b> acuan untuk menentukan awal waktu salat.</li></ul>" }
+                    ],
+                    pairs: [
+                        { id: 'lintang', t1: 'LINTANG TEMPAT', t2: 'MEMENGARUHI POSISI DAN LAMA MATAHARI DI ATAS UFUK', color: 'from-purple-500 to-purple-800' },
+                        { id: 'bujur', t1: 'BUJUR TEMPAT', t2: 'MENYEBABKAN PERBEDAAN WAKTU LOKAL ANTARWILAYAH', color: 'from-indigo-500 to-indigo-800' },
+                        { id: 'deklinasi', t1: 'DEKLINASI MATAHARI', t2: 'POSISI MATAHARI YANG BERUBAH SEPANJANG TAHUN', color: 'from-violet-500 to-violet-800' },
+                        { id: 'eot', t1: 'EQUATION OF TIME', t2: 'MEMENGARUHI PERBEDAAN WAKTU MATAHARI & WAKTU JAM', color: 'from-fuchsia-500 to-fuchsia-800' },
+                        { id: 'tinggi_t', t1: 'KETINGGIAN TEMPAT', t2: 'MEMENGARUHI KERENDAHAN UFUK & TERBIT/TERBENAM', color: 'from-pink-500 to-pink-800' },
+                        { id: 'tinggi_m', t1: 'TINGGI MATAHARI (h₀)', t2: 'ACUAN UNTUK MENENTUKAN MASUKNYA WAKTU SALAT', color: 'from-rose-500 to-rose-800' }
+                    ],
+                    questions: [
+                        { q: "Faktor geografis yang menyebabkan perbedaan waktu lokal (WIB, WITA, WIT) antar wilayah adalah?", options: ["Lintang tempat", "Bujur tempat", "Deklinasi", "Elevasi"], answer: 1 },
+                        { q: "Posisi matahari yang berubah-ubah ke utara dan selatan ekuator sepanjang tahun disebut?", options: ["Inklinasi", "Refraksi", "Deklinasi Matahari", "Rotasi"], answer: 2 },
+                        { q: "Mengapa orang di gedung bertingkat tinggi melihat matahari terbenam lebih lambat? Karena faktor...", options: ["Bujur tempat", "Equation of Time", "Deklinasi", "Ketinggian tempat"], answer: 3 },
+                        { q: "Selisih antara waktu yang ditunjukkan jam tangan dengan waktu matahari yang sebenarnya disebut?", options: ["Time Zone", "Equation of Time", "Deklinasi", "Greenwich Mean Time"], answer: 1 },
+                        { q: "Variabel (h₀) dalam rumus hisab waktu salat mewakili?", options: ["Tinggi Matahari", "Ketinggian Gunung", "Sudut Kiblat", "Jarak Bumi Matahari"], answer: 0 },
+                        { q: "Faktor geografis yang sangat mempengaruhi lamanya matahari berada di atas ufuk adalah?", options: ["Bujur Tempat", "Garis Tanggal", "Lintang Tempat", "Meridian"], answer: 2 }
+                    ]
+                },
+                {
+                    id: 5,
+                    title: "Level 5: Ketinggian Sudut",
+                    icon: "fas fa-drafting-compass",
+                    color: "#EC4899",
+                    type: "memory",
+                    hasMaterial: true,
+                    starsThreshold: [500, 750, 1000],
+                    material: [
+                        { title: "Derajat Matahari (h)", content: "Dalam ilmu hisab, masuknya waktu salat diterjemahkan ke dalam angka derajat ketinggian matahari dari ufuk." },
+                        { title: "Rincian Derajat", content: "<ul class='list-disc pl-5 space-y-2 text-sm text-gray-300'><li><b>Subuh:</b> -20° di bawah ufuk.</li><li><b>Zuhur:</b> Saat zawal / tergelincir dari kulminasi.</li><li><b>Asar:</b> Berdasarkan panjang bayangan benda.</li><li><b>Magrib:</b> Sekitar -1° di bawah ufuk.</li><li><b>Isya:</b> -18° di bawah ufuk.</li></ul>" }
+                    ],
+                    pairs: [
+                        { id: 'subuh_d', t1: 'SUBUH', t2: '-20° DI BAWAH UFUK', color: 'from-cyan-600 to-blue-800' },
+                        { id: 'zuhur_d', t1: 'ZUHUR', t2: 'MATAHARI MENGALAMI ZAWAL / TERGELINCIR', color: 'from-yellow-400 to-orange-500' },
+                        { id: 'asar_d', t1: 'ASAR', t2: 'DITENTUKAN PANJANG BAYANGAN BENDA', color: 'from-orange-500 to-red-600' },
+                        { id: 'magrib_d', t1: 'MAGRIB', t2: '-1° DI BAWAH UFUK', color: 'from-red-600 to-rose-900' },
+                        { id: 'isya_d', t1: 'ISYA', t2: '-18° DI BAWAH UFUK', color: 'from-purple-800 to-indigo-900' }
+                    ],
+                    questions: [
+                        { q: "Berdasarkan standar Kementerian Agama RI, waktu Subuh ditandai saat posisi matahari berada di ketinggian?", options: ["-18° di bawah ufuk", "-20° di bawah ufuk", "0° (tepat di ufuk)", "-1° di bawah ufuk"], answer: 1 },
+                        { q: "Angka ketinggian -18° di bawah ufuk barat menjadi standar penentuan masuknya waktu salat?", options: ["Magrib", "Isya", "Subuh", "Zuhur"], answer: 1 },
+                        { q: "Meskipun matahari sudah tenggelam secara visual, waktu Magrib secara astronomis disepakati pada ketinggian sekitar -1° karena faktor?", options: ["Refraksi cahaya atmosfer", "Rotasi bumi lambat", "Gravitasi bulan", "Bentuk bumi elips"], answer: 0 },
+                        { q: "Waktu salat apa yang penentuannya paling terikat dengan fenomena 'zawal'?", options: ["Subuh", "Asar", "Zuhur", "Isya"], answer: 2 },
+                        { q: "Berbeda dengan salat lain yang patokannya ufuk, tinggi matahari untuk salat Asar ditentukan oleh rumus yang melibatkan?", options: ["Lintang tempat saja", "Panjang bayangan benda saat Zuhur", "Fase bulan", "Kecepatan angin atmosfer"], answer: 1 }
+                    ]
+                },
+                {
+                    id: 6,
+                    title: "Level 6: Ujian Ekstrem Ahli Falak",
+                    icon: "fas fa-fire",
+                    color: "#EF4444",
+                    type: "extreme-quiz",
+                    hasMaterial: true,
+                    starsThreshold: [1000, 1500, 2000],
+                    material: [
+                        { title: "Ujian Kompetensi Ahli Falak", content: "Selamat datang di Level Ekstrem! Level ini menguji pemahaman mendalammu seputar astronomi bola, rumus hisab falak, instrumen, serta dalil penentuan waktu salat secara komprehensif." },
+                        { title: "Aturan Level Ekstrem", content: "Kamu akan menjawab 20 pertanyaan komprehensif tanpa pengurangan nyawa jika keliru. Cukup tampilkan jawaban yang benar!" }
+                    ],
+                    extremeQuestions: [
+                        { q: "Yang dijadikan patokan Benda Langit Untuk Menentukan Waktu Shalat Adalah?", options: ["Bulan", "Matahari", "Mars", "Jupiter"], answer: 1 },
+                        { q: "Berapa Sudut Ketika Matahari Berkulminasi?", options: ["0 derajat", "45 derajat", "90 derajat", "60 derajat"], answer: 0 },
+                        { q: "Dalam Berbagai Kitab Turats Di katakan Bahwa Di Mulainya Waktu Dzuhur Ketika?", options: ["Matahari Terbenam", "Matahari Menguning", "Matahari Tergelincir", "Matahari Terbit"], answer: 2 },
+                        { q: "Kapan Waktu Dzuhur Berakhir?", options: ["Ketika Langit Sudah Gelap", "Ketika Muncul Fajar", "Ketika Matahari Berada Di Titik Tertinggi", "Ketika Panjang Bayangan Suatu Benda Sama Dengan Panjang Benda Tersebut"], answer: 3 },
+                        { q: "Ayat Al-Qur'an mana yang sering dijadikan dasar awal waktu Dzuhur dengan lafaz 'liduluukisy-syams' (tergelincirnya matahari)?", options: ["QS. Al-Isra Ayat 78", "QS. Al-Fatihah Ayat 5", "QS. Al-Baqarah Ayat 183", "QS. Al-Ikhlas Ayat 1"], answer: 0 },
+                        { q: "Rumus Waktu Shalat Dzuhur Adalah “Dz = 12 – Equation Of Time + ((TZ x 15) – λ) / 15 + Ihtiyat”, Apa itu Ihtiyat?", options: ["Kehati – Hatian", "Jalur", "Pondasi", "Tergesa – gesa"], answer: 0 },
+                        { q: "Pada rumus waktu Zuhur '12 − e + ((TZ × 15) − λ)/15 + ihtiyat', berapa nilai TZ untuk wilayah WITA?", options: ["9", "10", "7", "8"], answer: 3 },
+                        { q: "Tahapan yang perlu di hitung terlebih dahulu dalam ilmu falak untuk menentukan awal waktu shalat ashar yaitu “ ZM = [δ matahari – φ tempat], apa itu ZM?", options: ["Jarak Sudut Antara Zenit dan Matahari", "Meredian Pas", "Semi Diameter", "Kerendahan Ufuk"], answer: 0 },
+                        { q: "“Maghrib” Berasal dari akar kata “Gharaba” yang artinya yaitu?", options: ["Terbit", "Terbenam", "Tergelincir", "Kulminasi"], answer: 1 },
+                        { q: "Dalam kriteria hisab Kemenag RI, ketinggian matahari saat awal waktu Maghrib (terbenam) yang lazim dipakai adalah ... ?", options: ["-1 (Sudah Mempertimbangkan Refraksi, Semi Diameter, DIP)", "-18", "-20", "-15"], answer: 0 },
+                        { q: "Kapan Di Mulainya Waktu Shalat Isya?", options: ["Muncul Fajar Kadzib", "Ketika Hilang Mega Merah", "Sepertiga Malam", "Matahari Terbit"], answer: 1 },
+                        { q: "Faktor Apakah yang Di Jadikan Dasar Masuknya Waktu Shalat Shubuh?", options: ["Fajar Kadzib", "Terbit Matahari", "Fajar Shadiq", "Terbenam Matahari"], answer: 2 },
+                        { q: "Manakah ciri fajar shadiq yang menandai masuknya waktu Subuh?", options: ["Cahaya Putih Membentang Horizontal Di sepanjang Ufuk Timur dan Makin Terang", "Cahaya merah di ufuk barat", "Munculnya bintang timur (Venus) tepat di atas kepala", "Cahaya menjulang vertikal ke atas, lalu gelap kembali"], answer: 0 },
+                        { q: "Berapa ketinggian matahari (di bawah ufuk) untuk awal waktu Subuh menurut kriteria Kemenag RI?", options: ["-20", "-18", "-15", "-12"], answer: 0 },
+                        { q: "Kenapa di Tiap Kota Waktu Shalatnya itu Berbeda-Beda?", options: ["Karena Berbeda Jumlah penduduk", "Karena berbeda Lintang dan Bujur", "Karene Perbedaan Madzhab Di Tiap Kota", "Karena Perbedaan Ketinggian Masjid Di tiap Kota"], answer: 1 },
+                        { q: "Pada Dasarnya Ulama Terdahulu Menentukan Awal Waktu Shalat Dengan Instrumen?", options: ["Tongkat Istiwa’ (jam Pencet)", "Jam Digital", "Wujudul Hilal", "Aplikasi Ponsel"], answer: 0 },
+                        { q: "Salah satu Intrumen yang bisa kita nentuin awal waktu shalat adalah, kecuali?", options: ["Tongkat Istiwa’", "Astrolabe", "Rubu’ Mujayyab", "Kompas"], answer: 3 },
+                        { q: "Kenapa Waktu Imsak di kuranngi 10 menit sebelum waktu shubuh?", options: ["Untuk Kehati-hatian", "Dilarang Makan dan Minum", "Mulai Ibadah Puasa", "Ketetapan Wajib"], answer: 0 },
+                        { q: "Salah Satu Instrumen Untuk Mengukur Kecerahan Langit Waktu Fajar Adalah?", options: ["SQM (Sky Quality Meter)", "AWS", "Higrometer", "Termohigrometer"], answer: 0 },
+                        { q: "Berakhirnya Waktu Shalat Shubuh Di tandai Dengan?", options: ["Munculnya Fajar Kafdzib", "Terbitnya Matahari (Syuruq)", "Tergelincir Matahari", "Matahari Setinggi 4 derajat 15 menit"], answer: 1 }
+                    ]
+                }
+            ]
+        };
+
+        const App = {
+            state: {
+                playerName: '',
+                unlockedLevels: 1,
+                currentLevelId: null,
+                totalScore: 0,
+                lives: 3,
+                starsData: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+                stats: { correct: 0, wrong: 0, playTime: 0 },
+
+                levelStartTime: 0,
+                levelScore: 0,
+                levelMistakes: 0,
+                levelCorrect: 0,
+                combo: 0,
+
+                flippedCards: [],
+                matchedPairs: 0,
+                isBoardLocked: false,
+                currentQuestionsPool: [],
+
+                currentSlideIndex: 0,
+                extremeQuestionIndex: 0
+            },
+
+            saveData() {
+                const dataToSave = {
+                    playerName: this.state.playerName,
+                    unlockedLevels: this.state.unlockedLevels,
+                    totalScore: this.state.totalScore,
+                    starsData: this.state.starsData,
+                    stats: this.state.stats
+                };
+                localStorage.setItem('astroFalakSave', JSON.stringify(dataToSave));
+            },
+
+            loadData() {
+                try {
+                    const saved = localStorage.getItem('astroFalakSave');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        this.state.playerName = parsed.playerName || '';
+                        this.state.unlockedLevels = parsed.unlockedLevels || 1;
+                        this.state.totalScore = parsed.totalScore || 0;
+                        this.state.starsData = parsed.starsData || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+                        this.state.stats = parsed.stats || { correct: 0, wrong: 0, playTime: 0 };
+
+                        if (this.state.playerName) {
+                            document.getElementById('player-name-input').value = this.state.playerName;
+                        }
+                    }
+                } catch (e) { console.error("Error loading save data"); }
+            },
+
+            resetDataConfirm() {
+                this.showModal('Peringatan', 'Yakin ingin mereset semua data permainan?', 'fa-exclamation-triangle', () => {
+                    localStorage.removeItem('astroFalakSave');
+                    location.reload();
+                }, true);
+            },
+
+            init() {
+                this.loadData();
+                this.setupCanvasStars();
+                this.showScreen('home');
+                requestAnimationFrame(this.animateStars.bind(this));
+            },
+
+            showScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById('screen-' + screenId).classList.add('active');
+
+                if (screenId === 'map') this.renderMap();
+                if (screenId === 'home') document.getElementById('player-name-input').focus();
+            },
+
+            startGame() {
+                const name = document.getElementById('player-name-input').value.trim();
+                if (!name) {
+                    this.showModal('Info', 'Mohon masukkan namamu terlebih dahulu, Astronot!', 'fa-info-circle');
+                    return;
+                }
+                this.state.playerName = name;
+                this.saveData();
+                this.showScreen('map');
+            },
+
+            renderMap() {
+                document.getElementById('map-player-name').innerText = this.state.playerName;
+                const totalStars = Object.values(this.state.starsData).reduce((a, b) => a + b, 0);
+                document.getElementById('map-total-stars').innerText = totalStars;
+
+                const container = document.getElementById('map-container');
+                container.innerHTML = '';
+
+                const levels = [...GameData.levels];
+
+                levels.forEach((level, index) => {
+                    const isUnlocked = level.id <= this.state.unlockedLevels;
+                    const stars = this.state.starsData[level.id] || 0;
+                    const isCurrent = level.id === this.state.unlockedLevels;
+
+                    const node = document.createElement('div');
+                    node.className = `level-node w-full flex items-center justify-center mb-16 relative ${isUnlocked ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed grayscale'}`;
+
+                    if (index < levels.length - 1) {
+                        const line = document.createElement('div');
+                        line.className = `absolute w-2 h-20 -bottom-16 rounded-full ${isUnlocked && level.id < this.state.unlockedLevels ? 'bg-cyan-500 shadow-[0_0_10px_#06b6d4]' : 'bg-white/10'}`;
+                        node.appendChild(line);
+                    }
+
+                    if (isUnlocked) {
+                        node.onclick = () => this.prepareLevel(level.id);
+                    }
+
+                    let starsHtml = '';
+                    if (isUnlocked) {
+                        starsHtml = `<div class="absolute -bottom-5 flex gap-1 bg-space-800 rounded-full px-2 py-0.5 border border-white/10">`;
+                        for (let i = 0; i < 3; i++) {
+                            starsHtml += `<i class="fas fa-star text-xs ${i < stars ? 'text-yellow-400' : 'text-gray-600'}"></i>`;
+                        }
+                        starsHtml += `</div>`;
+                    }
+
+                    node.innerHTML += `
+                        <div class="relative flex flex-col items-center group">
+                            <div class="w-20 h-20 rounded-full flex items-center justify-center border-4 ${isCurrent ? 'border-cyan-400 animate-pulse shadow-[0_0_20px_#06b6d4]' : (isUnlocked ? 'border-green-400' : 'border-gray-500')} z-10" style="background-color: ${isUnlocked ? level.color : '#374151'}">
+                                <i class="${isUnlocked ? level.icon : 'fas fa-lock'} text-3xl text-white drop-shadow-md"></i>
+                            </div>
+                            <div class="mt-3 font-bold text-sm bg-space-800/80 px-4 py-1 rounded-full border border-white/10 whitespace-nowrap">${level.title}</div>
+                            ${starsHtml}
+                        </div>
+                    `;
+                    container.appendChild(node);
+                });
+            },
+
+            prepareLevel(levelId) {
+                this.state.currentLevelId = levelId;
+                const level = GameData.levels.find(l => l.id === levelId);
+
+                if (level.hasMaterial) {
+                    this.showMaterialScreen(level);
+                } else {
+                    this.startCurrentLevelGame();
+                }
+            },
+
+            showMaterialScreen(level) {
+                this.state.currentSlideIndex = 0;
+                document.getElementById('material-title').innerHTML = `<i class="${level.icon} mr-2"></i> Log Materi Level ${level.id}`;
+                this.renderMaterialSlide(level);
+                this.showScreen('material');
+            },
+
+            renderMaterialSlide(level) {
+                const area = document.getElementById('material-content-area');
+                const dots = document.getElementById('material-dots');
+                const slide = level.material[this.state.currentSlideIndex];
+
+                area.innerHTML = `
+                    <div class="animate-bounce-in">
+                        <h3 class="text-2xl font-bold mb-4 text-white">${slide.title}</h3>
+                        <div class="text-gray-200 text-lg leading-relaxed bg-space-700/50 p-6 rounded-xl border border-white/5 shadow-inner">
+                            ${slide.content}
+                        </div>
+                    </div>
+                `;
+
+                dots.innerHTML = level.material.map((_, i) =>
+                    `<div class="w-2.5 h-2.5 rounded-full ${i === this.state.currentSlideIndex ? 'bg-cyan-400' : 'bg-gray-600'} transition-colors"></div>`
+                ).join('');
+
+                const isLast = this.state.currentSlideIndex === level.material.length - 1;
+                document.getElementById('btn-prev-slide').style.display = this.state.currentSlideIndex > 0 ? 'block' : 'none';
+                document.getElementById('btn-next-slide').style.display = isLast ? 'none' : 'block';
+                document.getElementById('btn-start-from-material').style.display = isLast ? 'block' : 'none';
+            },
+
+            nextSlide() {
+                const level = GameData.levels.find(l => l.id === this.state.currentLevelId);
+                if (this.state.currentSlideIndex < level.material.length - 1) {
+                    this.state.currentSlideIndex++;
+                    this.renderMaterialSlide(level);
+                }
+            },
+
+            prevSlide() {
+                if (this.state.currentSlideIndex > 0) {
+                    this.state.currentSlideIndex--;
+                    const level = GameData.levels.find(l => l.id === this.state.currentLevelId);
+                    this.renderMaterialSlide(level);
+                }
+            },
+
+            startCurrentLevelGame() {
+                const level = GameData.levels.find(l => l.id === this.state.currentLevelId);
+
+                this.state.lives = 3;
+                this.state.levelScore = 0;
+                this.state.levelMistakes = 0;
+                this.state.levelCorrect = 0;
+                this.state.combo = 0;
+                this.state.levelStartTime = Date.now();
+
+                if (level.type === 'extreme-quiz') {
+                    this.state.extremeQuestionIndex = 0;
+                    this.state.currentQuestionsPool = [...level.extremeQuestions];
+                } else if (level.questions) {
+                    this.state.currentQuestionsPool = [...level.questions].sort(() => 0.5 - Math.random());
+                }
+
+                this.updateHUD();
+                document.getElementById('game-level-title').innerText = level.title;
+
+                this.showScreen('game');
+
+                const board = document.getElementById('game-board-container');
+                board.innerHTML = '';
+
+                if (level.type === 'sort') {
+                    this.initSortGame(level, board);
+                } else if (level.type === 'memory') {
+                    this.initMemoryGame(level, board);
+                } else if (level.type === 'extreme-quiz') {
+                    this.initExtremeQuiz(board);
+                }
+            },
+
+            updateHUD() {
+                document.getElementById('game-score').innerText = this.state.levelScore;
+
+                const livesContainer = document.getElementById('game-lives');
+                livesContainer.innerHTML = '';
+                const level = GameData.levels.find(l => l.id === this.state.currentLevelId);
+
+                if (level.type === 'extreme-quiz') {
+                    livesContainer.innerHTML = `<span class="text-xs text-red-400 font-bold bg-red-950/50 px-3 py-1 rounded-full border border-red-500/30"><i class="fas fa-shield-alt mr-1"></i> Mode Kebal Kesalahan</span>`;
+                    return;
+                }
+
+                for (let i = 0; i < 3; i++) {
+                    if (i < this.state.lives) {
+                        livesContainer.innerHTML += `<i class="fas fa-heart text-red-500 text-xl md:text-2xl drop-shadow-[0_0_5px_rgba(239,68,68,0.8)] animate-pulse-slow"></i>`;
+                    } else {
+                        livesContainer.innerHTML += `<i class="fas fa-heart text-gray-700 text-xl md:text-2xl opacity-50"></i>`;
+                    }
+                }
+            },
+
+            addScore(amount) {
+                let finalAmount = amount;
+                if (amount > 0) {
+                    this.state.combo++;
+                    if (this.state.combo > 1) {
+                        finalAmount += (this.state.combo * 10);
+                    }
+                    this.state.levelCorrect++;
+                    this.state.stats.correct++;
+                } else {
+                    this.state.combo = 0;
+                    this.state.levelMistakes++;
+                    this.state.stats.wrong++;
+                }
+
+                this.state.levelScore += finalAmount;
+                if (this.state.levelScore < 0) this.state.levelScore = 0;
+
+                const scoreEl = document.getElementById('game-score');
+                scoreEl.style.transform = 'scale(1.5)';
+                scoreEl.style.color = amount > 0 ? '#4ADE80' : '#EF4444';
+                setTimeout(() => {
+                    scoreEl.style.transform = 'scale(1)';
+                    scoreEl.style.color = 'white';
+                    this.updateHUD();
+                }, 300);
+            },
+
+            reduceLife() {
+                this.state.lives--;
+                this.addScore(-25);
+                this.updateHUD();
+
+                if (this.state.lives <= 0) {
+                    this.handleGameOver();
+                } else {
+                    document.getElementById('screen-game').classList.add('animate-shake');
+                    setTimeout(() => document.getElementById('screen-game').classList.remove('animate-shake'), 500);
+                }
+            },
+
+            getColor(id) {
+                const colorMap = { 'subuh': '#38BDF8', 'zuhur': '#FDE047', 'asar': '#FB923C', 'magrib': '#F43F5E', 'isya': '#8B5CF6' };
+                return colorMap[id] || '#374151';
+            },
+
+            initSortGame(level, board) {
+                board.innerHTML = `
+                    <div class="w-full max-w-md bg-space-800/80 p-5 md:p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col gap-6 animate-bounce-in">
+                        <div class="text-center">
+                            <h3 class="text-xl font-bold mb-2 text-cyan-400">Urutkan Waktu Salat</h3>
+                            <p class="text-sm text-gray-300 mb-2">Tarik dan geser blok di bawah ini ke urutan yang benar.</p>
+                            <p class="text-xs text-yellow-400 italic">(Paling awal berada di paling atas)</p>
+                        </div>
+                        <div id="sortable-list" class="flex flex-col gap-3 min-h-[300px]">
+                            ${[...level.items].sort(() => 0.5 - Math.random()).map(item => `
+                                <div class="sort-item p-4 rounded-xl cursor-grab active:cursor-grabbing font-bold shadow-md border border-white/20 text-center flex items-center justify-between" data-id="${item.id}" data-order="${item.order}" style="background-color: ${this.getColor(item.id)}; color: ${item.id === 'zuhur' ? '#000' : '#fff'}">
+                                    <i class="fas fa-grip-lines opacity-50 text-xl"></i>
+                                    <span class="flex-1 text-lg">${item.label}</span>
+                                    <i class="fas fa-arrows-alt-v opacity-50"></i>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button onclick="App.checkSortResult()" class="btn-game bg-gradient-to-r from-cyan-500 to-blue-600 py-4 rounded-xl font-bold shadow-lg w-full text-lg mt-2 border border-cyan-400/30">
+                            <i class="fas fa-check-circle mr-2"></i> Periksa Urutan
+                        </button>
+                    </div>
+                `;
+
+                new Sortable(document.getElementById('sortable-list'), {
+                    animation: 250,
+                    ghostClass: 'opacity-50',
+                    dragClass: 'scale-105',
+                    delayOnTouchOnly: true,
+                    delay: 100
+                });
+            },
+
+            checkSortResult() {
+                const items = document.querySelectorAll('.sort-item');
+                let isCorrect = true;
+
+                items.forEach((item, index) => {
+                    if (parseInt(item.dataset.order) !== index + 1) {
+                        isCorrect = false;
+                        item.classList.add('border-red-500', 'border-4', 'animate-shake');
+                        setTimeout(() => item.classList.remove('border-red-500', 'border-4', 'animate-shake'), 1000);
+                    } else {
+                        item.classList.add('border-green-500', 'border-4');
+                        setTimeout(() => item.classList.remove('border-green-500', 'border-4'), 1000);
+                    }
+                });
+
+                if (isCorrect) {
+                    this.addScore(100);
+                    setTimeout(() => {
+                        this.triggerLevelQuestion(() => {
+                            this.handleLevelComplete();
+                        });
+                    }, 1000);
+                } else {
+                    this.reduceLife();
+                }
+            },
+
+            initMemoryGame(level, board) {
+                this.state.flippedCards = [];
+                this.state.matchedPairs = 0;
+                this.state.isBoardLocked = true;
+
+                let cards = [];
+                level.pairs.forEach((pair, index) => {
+                    cards.push({ id: `a_${index}`, pairId: pair.id, text: pair.t1, color: pair.color });
+                    cards.push({ id: `b_${index}`, pairId: pair.id, text: pair.t2, color: pair.color });
+                });
+
+                cards = cards.sort(() => 0.5 - Math.random());
+                const cols = cards.length > 10 ? 'grid-cols-3 md:grid-cols-4 lg:grid-cols-6' : 'grid-cols-2 md:grid-cols-5';
+
+                board.innerHTML = `
+                    <div class="w-full max-w-4xl mx-auto" id="memory-board-wrapper">
+                        <div class="grid ${cols} gap-3 md:gap-4" id="memory-grid">
+                            ${cards.map((c) => `
+                                <div class="memory-card relative w-full aspect-[3/4] md:aspect-square perspective-1000 rounded-xl flipped" data-id="${c.id}" data-pair="${c.pairId}" onclick="App.flipCard(this)">
+                                    <div class="w-full h-full absolute top-0 left-0 transform-style-3d shadow-lg memory-card-inner">
+                                        <div class="w-full h-full absolute backface-hidden bg-space-700 border-2 border-white/20 rounded-xl flex items-center justify-center p-2 z-10" style="transform: rotateY(0deg);">
+                                            <div class="w-10 h-10 rounded-full border-2 border-white/10 flex items-center justify-center opacity-50 bg-space-800">
+                                                <i class="fas fa-star text-star-400/50 text-sm"></i>
+                                            </div>
+                                        </div>
+                                        <div class="w-full h-full absolute backface-hidden rotate-y-180 bg-gradient-to-br ${c.color} border-2 border-white/50 rounded-xl flex items-center justify-center p-3 text-center z-0">
+                                            <span class="font-bold text-xs md:text-sm drop-shadow-md leading-tight text-white">${c.text}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                // Show Ready modal before previewing cards for 8 seconds
+                this.showModalElement('modal-ready');
+            },
+
+            confirmReadyStart() {
+                this.hideModal();
+                const allCards = document.querySelectorAll('.memory-card');
+
+                // Show face up for exactly 8 seconds
+                setTimeout(() => {
+                    allCards.forEach(card => card.classList.remove('flipped'));
+                    this.state.isBoardLocked = false;
+                }, 8000);
+            },
+
+            flipCard(cardEl) {
+                if (this.state.isBoardLocked) return;
+                if (cardEl.classList.contains('flipped')) return;
+                if (this.state.flippedCards.includes(cardEl)) return;
+
+                cardEl.classList.add('flipped');
+                this.state.flippedCards.push(cardEl);
+
+                if (this.state.flippedCards.length === 2) {
+                    this.state.isBoardLocked = true;
+                    setTimeout(() => this.checkMemoryMatch(), 800);
+                }
+            },
+
+            checkMemoryMatch() {
+                const [card1, card2] = this.state.flippedCards;
+                const match = card1.dataset.pair === card2.dataset.pair;
+
+                if (match) {
+                    card1.querySelector('.rotate-y-180').classList.add('matched');
+                    card2.querySelector('.rotate-y-180').classList.add('matched');
+
+                    this.state.matchedPairs++;
+                    this.addScore(100);
+
+                    const totalPairs = GameData.levels.find(l => l.id === this.state.currentLevelId).pairs.length;
+
+                    if (this.state.matchedPairs === totalPairs) {
+                        setTimeout(() => this.handleLevelComplete(), 1000);
+                    } else {
+                        setTimeout(() => {
+                            this.triggerLevelQuestion(() => {
+                                this.resetFlippedState(true);
+                            }, () => {
+                                this.unflipCards(card1, card2);
+                                this.resetFlippedState(false);
+                            });
+                        }, 500);
+                    }
+                } else {
+                    this.reduceLife();
+                    this.unflipCards(card1, card2);
+                    setTimeout(() => this.resetFlippedState(false), 500);
+                }
+            },
+
+            unflipCards(c1, c2) {
+                c1.classList.remove('flipped');
+                c2.classList.remove('flipped');
+            },
+
+            resetFlippedState(keepFlipped) {
+                this.state.flippedCards = [];
+                this.state.isBoardLocked = false;
+            },
+
+            initExtremeQuiz(board) {
+                this.renderExtremeQuestion(board);
+            },
+
+            renderExtremeQuestion(board) {
+                const questions = GameData.levels.find(l => l.id === 6).extremeQuestions;
+                const qIdx = this.state.extremeQuestionIndex;
+
+                if (qIdx >= questions.length) {
+                    this.handleLevelComplete();
+                    return;
+                }
+
+                const qData = questions[qIdx];
+                const optionLetters = ['A', 'B', 'C', 'D'];
+
+                board.innerHTML = `
+                    <div class="w-full max-w-xl glass-panel border border-red-500/40 rounded-2xl p-6 md:p-8 animate-bounce-in shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs uppercase tracking-wider px-3 py-1 bg-red-900/60 rounded-full text-red-300 font-bold border border-red-500/30">
+                                Pertanyaan ${qIdx + 1} dari ${questions.length}
+                            </span>
+                            <span class="text-xs text-yellow-400 font-bold"><i class="fas fa-star mr-1"></i> Level Ekstrem</span>
+                        </div>
+                        <h3 class="text-lg md:text-xl font-bold mb-6 text-white leading-snug">${qData.q}</h3>
+                        <div class="flex flex-col gap-3" id="extreme-options">
+                            ${qData.options.map((opt, i) => `
+                                <button onclick="App.answerExtreme(${i}, ${qData.answer})" class="btn-game w-full text-left bg-space-800/90 hover:bg-red-950/40 border border-white/10 rounded-xl p-4 transition-colors font-medium flex items-center gap-3 group">
+                                    <span class="w-8 h-8 rounded-lg bg-space-700 group-hover:bg-red-600 flex items-center justify-center font-bold text-sm text-white transition-colors">${optionLetters[i]}</span>
+                                    <span class="flex-1">${opt}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            },
+
+            answerExtreme(selectedIdx, correctIdx) {
+                const optionsContainer = document.getElementById('extreme-options');
+                const buttons = optionsContainer.querySelectorAll('button');
+
+                buttons.forEach(b => b.disabled = true);
+
+                const optionLetters = ['A', 'B', 'C', 'D'];
+
+                if (selectedIdx === correctIdx) {
+                    buttons[selectedIdx].classList.add('bg-green-600/80', 'border-green-400');
+                    this.addScore(150);
+                    setTimeout(() => {
+                        this.state.extremeQuestionIndex++;
+                        this.renderExtremeQuestion(document.getElementById('game-board-container'));
+                    }, 1000);
+                } else {
+                    buttons[selectedIdx].classList.add('bg-red-600/80', 'border-red-400');
+                    buttons[correctIdx].classList.add('bg-green-600/60', 'border-green-400', 'animate-pulse');
+
+                    this.showModal('Kunci Jawaban', `Jawaban yang benar adalah: ${optionLetters[correctIdx]}. ${GameData.levels.find(l => l.id === 6).extremeQuestions[this.state.extremeQuestionIndex].options[correctIdx]}`, 'fas fa-info-circle', () => {
+                        this.hideModal();
+                        this.state.extremeQuestionIndex++;
+                        this.renderExtremeQuestion(document.getElementById('game-board-container'));
+                    });
+                }
+            },
+
+            triggerLevelQuestion(onSuccess, onFail = null) {
+                if (this.state.currentQuestionsPool.length === 0) {
+                    if (onSuccess) onSuccess();
+                    return;
+                }
+
+                const qData = this.state.currentQuestionsPool.pop();
+
+                document.getElementById('quiz-question').innerText = qData.q;
+                const optsContainer = document.getElementById('quiz-options');
+                optsContainer.innerHTML = '';
+
+                let optionsWithIdx = qData.options.map((opt, i) => ({ text: opt, originalIndex: i }));
+                optionsWithIdx = optionsWithIdx.sort(() => 0.5 - Math.random());
+
+                optionsWithIdx.forEach((opt) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'w-full text-left bg-space-700/80 hover:bg-cyan-900/50 border border-white/10 rounded-xl p-4 transition-colors font-medium';
+                    btn.innerText = opt.text;
+                    btn.onclick = () => {
+                        optsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
+
+                        if (opt.originalIndex === qData.answer) {
+                            btn.classList.add('bg-green-600/80', 'border-green-400');
+                            this.addScore(50);
+                            setTimeout(() => {
+                                this.hideModal();
+                                if (onSuccess) onSuccess();
+                            }, 1000);
+                        } else {
+                            btn.classList.add('bg-red-600/80', 'border-red-400');
+                            const correctBtnIndex = Array.from(optsContainer.children).findIndex(b => b.innerText === qData.options[qData.answer]);
+                            if (correctBtnIndex > -1) {
+                                optsContainer.children[correctBtnIndex].classList.add('bg-green-600/50', 'border-green-400', 'animate-pulse');
+                            }
+
+                            this.reduceLife();
+                            setTimeout(() => {
+                                this.hideModal();
+                                if (this.state.lives > 0 && onFail) onFail();
+                            }, 2000);
+                        }
+                    };
+                    optsContainer.appendChild(btn);
+                });
+
+                this.showModalElement('modal-quiz');
+            },
+
+            handleLevelComplete() {
+                const level = GameData.levels.find(l => l.id === this.state.currentLevelId);
+
+                const endTime = Date.now();
+                const timeTakenSec = Math.floor((endTime - this.state.levelStartTime) / 1000);
+                this.state.stats.playTime += timeTakenSec;
+
+                let timeBonus = 0;
+                if (timeTakenSec < 60) timeBonus = 100;
+                else if (timeTakenSec < 120) timeBonus = 50;
+
+                this.state.levelScore += timeBonus;
+                this.state.totalScore += this.state.levelScore;
+
+                let starsEarned = 0;
+                if (this.state.levelScore >= level.starsThreshold[2]) starsEarned = 3;
+                else if (this.state.levelScore >= level.starsThreshold[1]) starsEarned = 2;
+                else starsEarned = 1;
+
+                if (starsEarned > this.state.starsData[level.id]) {
+                    this.state.starsData[level.id] = starsEarned;
+                }
+
+                if (this.state.unlockedLevels === level.id && level.id < GameData.levels.length) {
+                    this.state.unlockedLevels++;
+                }
+
+                this.saveData();
+
+                document.getElementById('complete-score').innerText = this.state.levelScore;
+
+                const totalAttempt = this.state.levelCorrect + this.state.levelMistakes;
+                const accuracy = totalAttempt > 0 ? Math.round((this.state.levelCorrect / totalAttempt) * 100) : 100;
+                document.getElementById('complete-accuracy').innerText = `${accuracy}%`;
+                document.getElementById('complete-time-bonus').innerText = `+${timeBonus}`;
+
+                const starsContainer = document.getElementById('complete-stars');
+                starsContainer.innerHTML = '';
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        starsContainer.innerHTML += `<i class="fas fa-star text-4xl ${i < starsEarned ? 'text-yellow-400 drop-shadow-[0_0_10px_#FACC15]' : 'text-gray-700'} animate-bounce-in"></i>`;
+                    }, i * 300);
+                }
+
+                const nextBtn = document.getElementById('btn-next-level-action');
+                if (level.id === GameData.levels.length) {
+                    nextBtn.innerHTML = `Lihat Hari Akhir <i class="fas fa-trophy ml-2"></i>`;
+                    nextBtn.onclick = () => {
+                        this.hideModal();
+                        this.handleVictory();
+                    };
+                } else {
+                    nextBtn.innerHTML = `Lanjut Level Berikutnya <i class="fas fa-arrow-right ml-2"></i>`;
+                    nextBtn.onclick = () => {
+                        this.hideModal();
+                        this.prepareLevel(level.id + 1);
+                    };
+                }
+
+                this.showModalElement('modal-complete');
+            },
+
+            handleGameOver() {
+                this.showModal('Misi Gagal', 'Sistem kehabisan energi (Nyawa Habis). Silakan coba lagi level ini.', 'fa-skull', () => {
+                    this.showScreen('map');
+                });
+            },
+
+            handleVictory() {
+                document.getElementById('victory-score').innerText = this.state.totalScore;
+                document.getElementById('victory-correct').innerText = this.state.stats.correct;
+                document.getElementById('victory-wrong').innerText = this.state.stats.wrong;
+
+                const totalStars = Object.values(this.state.starsData).reduce((a, b) => a + b, 0);
+                document.getElementById('victory-stars').innerText = totalStars;
+
+                // Do not auto-dismiss; keep visible with options to home or reset
+                this.showModalElement('modal-victory');
+            },
+
+            showModal(title, text, iconClass, callback = null, showCancel = false) {
+                document.getElementById('msg-title').innerText = title;
+                document.getElementById('msg-text').innerText = text;
+                document.getElementById('msg-icon').innerHTML = `<i class="fas ${iconClass} text-cyan-400"></i>`;
+
+                const btn = document.getElementById('msg-btn');
+                btn.onclick = () => {
+                    this.hideModal();
+                    if (callback) callback();
+                };
+
+                if (showCancel) {
+                    btn.innerText = "Ya, Lanjutkan";
+                    btn.classList.replace('bg-cyan-600', 'bg-red-600');
+                } else {
+                    btn.innerText = "OK";
+                    btn.classList.replace('bg-red-600', 'bg-cyan-600');
+                }
+
+                this.showModalElement('modal-message');
+            },
+
+            showModalElement(id) {
+                const overlay = document.getElementById('modal-overlay');
+                Array.from(overlay.children).forEach(c => {
+                    c.classList.add('hidden');
+                    c.classList.remove('scale-100');
+                    c.classList.add('scale-90');
+                });
+
+                overlay.classList.remove('hidden');
+                setTimeout(() => {
+                    overlay.classList.remove('opacity-0');
+                    overlay.classList.add('opacity-100');
+                    const el = document.getElementById(id);
+                    el.classList.remove('hidden');
+                    setTimeout(() => {
+                        el.classList.remove('scale-90');
+                        el.classList.add('scale-100');
+                    }, 50);
+                }, 10);
+            },
+
+            hideModal() {
+                const overlay = document.getElementById('modal-overlay');
+                overlay.classList.remove('opacity-100');
+                overlay.classList.add('opacity-0');
+
+                Array.from(overlay.children).forEach(c => {
+                    c.classList.remove('scale-100');
+                    c.classList.add('scale-90');
+                });
+
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 300);
+            },
+
+            setupCanvasStars() {
+                const canvas = document.getElementById('canvas-stars');
+                this.ctx = canvas.getContext('2d');
+                this.stars = [];
+                this.resizeCanvas();
+                window.addEventListener('resize', this.resizeCanvas.bind(this));
+
+                for (let i = 0; i < 100; i++) {
+                    this.stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        radius: Math.random() * 1.5,
+                        vx: Math.floor(Math.random() * 50) - 25,
+                        vy: Math.floor(Math.random() * 50) - 25
+                    });
+                }
+            },
+
+            resizeCanvas() {
+                const canvas = document.getElementById('canvas-stars');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            },
+
+            animateStars() {
+                const canvas = document.getElementById('canvas-stars');
+                this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                this.ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+                this.ctx.beginPath();
+                for (let i = 0; i < this.stars.length; i++) {
+                    let star = this.stars[i];
+                    this.ctx.moveTo(star.x, star.y);
+                    this.ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2, true);
+
+                    star.y += star.vy / 100;
+                    if (star.y > canvas.height) star.y = 0;
+                }
+                this.ctx.fill();
+                requestAnimationFrame(this.animateStars.bind(this));
+            }
+        };
+
+        window.onload = () => App.init();
+    </script>
+</body>
+
+</html>
