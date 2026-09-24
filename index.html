@@ -19,7 +19,7 @@
                     fontFamily: { sans: ['Calibri', 'sans-serif'] },
                     colors: {
                         space: { 900: '#0B0B1A', 800: '#141432', 700: '#1D1D4A', 600: '#262662', 500: '#34347A' },
-                        accent: { subuh: '#ffffff', zuhur: '#ffffff', asar: '#ffffff', magrib: '#Ffffff', isya: '#ffffff', HOTS: '#EF4444' }
+                        accent: { subuh: '#38BDF8', zuhur: '#FDE047', asar: '#FB923C', magrib: '#F43F5E', isya: '#8B5CF6', HOTS: '#EF4444' }
                     },
                     animation: {
                         'float': 'float 3s ease-in-out infinite',
@@ -224,9 +224,9 @@
         <div
             class="glass-panel rounded-2xl w-full max-w-2xl h-[80vh] flex flex-col relative overflow-hidden shadow-2xl">
             <div class="p-4 border-b border-white/10 flex justify-between items-center bg-blue-800/80">
-                <h2 id="materi-title" class="font-bold text-xl text-blue-400"><i class="fas fa-book-open mr-2"></i>
+                <h2 id="materi-title" class="font-bold text-xl text-cyan-400"><i class="fas fa-book-open mr-2"></i>
                     MATERI</h2>
-                <button onclick="App.startCurrentLevelGame()" class="text-gray-400 hover:text-white"><i
+                <button onclick="App.startCurrentLevelGame()" class="text-blue-400 hover:text-white"><i
                         class="fas fa-times text-xl"></i></button>
             </div>
 
@@ -303,7 +303,7 @@
         <!-- Quiz Modal -->
         <div id="modal-quiz"
             class="hidden glass-panel border border-cyan-500/50 rounded-2xl p-6 max-w-md w-[95%] transform scale-90 transition-transform duration-300 relative overflow-hidden shadow-[0_0_30px_rgba(6,182,212,0.3)]">
-            <div class="absolute -top-10 -right-10 text-blue-500/10 text-9xl"><i class="fas fa-question-circle"></i>
+            <div class="absolute -top-10 -right-10 text-cyan-500/10 text-9xl"><i class="fas fa-question-circle"></i>
             </div>
 
             <div class="flex items-center gap-3 mb-4 relative z-10">
@@ -608,8 +608,8 @@
                     hasMateri: true,
                     starsThreshold: [1000, 1500, 2000],
                     materi: [
-                        { title: "SOAL HOTS", content: "Selamat datang di Level 6! Level ini menguji pemahaman seputar waktu salat yang lebih mendalam." },
-                        { title: "Aturan Level 6", content: "Kamu akan menjawab 20 pertanyaan tanpa pengurangan nyawa jika keliru!" }
+                        { title: "SOAL HOTS", content: "Selamat datang di Level 6! Level ini menguji pemahaman mendalammu seputar waktu salat yang lebih mendalam." },
+                        { title: "Aturan Level 6", content: "Kamu akan menjawab 20 pertanyaan komprehensif tanpa pengurangan nyawa jika keliru. Cukup tampilkan jawaban yang benar!" }
                     ],
                     HOTSQuestions: [
                         { q: "Yang dijadikan patokan Benda Langit Untuk Menentukan Waktu Shalat Adalah?", options: ["Bulan", "Matahari", "Mars", "Jupiter"], answer: 1 },
@@ -668,12 +668,12 @@
                     totalScore: this.state.totalScore,
                     stats: this.state.stats
                 };
-                localStorage.setItem('ALBIRUNISave', JSON.stringify(dataToSave));
+                localStorage.setItem('astroFalakSave', JSON.stringify(dataToSave));
             },
 
             loadData() {
                 try {
-                    const saved = localStorage.getItem('ALBIRUNISave');
+                    const saved = localStorage.getItem('astroFalakSave');
                     if (saved) {
                         const parsed = JSON.parse(saved);
                         this.state.playerName = parsed.playerName || '';
@@ -690,7 +690,7 @@
 
             resetDataConfirm() {
                 this.showModal('Peringatan', 'Yakin ingin mereset semua data permainan?', 'fa-exclamation-triangle', () => {
-                    localStorage.removeItem('ALBIRUNISave');
+                    localStorage.removeItem('astroFalakSave');
                     location.reload();
                 }, true);
             },
@@ -894,7 +894,7 @@
                     scoreEl.style.transform = 'scale(1)';
                     scoreEl.style.color = 'white';
                     this.updateHUD();
-                }, 1000);
+                }, 300);
             },
 
             reduceLife() {
@@ -906,7 +906,7 @@
                     this.handleGameOver();
                 } else {
                     document.getElementById('screen-game').classList.add('animate-shake');
-                    setTimeout(() => document.getElementById('screen-game').classList.remove('animate-shake'), 1000);
+                    setTimeout(() => document.getElementById('screen-game').classList.remove('animate-shake'), 500);
                 }
             },
 
@@ -919,7 +919,7 @@
                 board.innerHTML = `
                     <div class="w-full max-w-md bg-space-800/80 p-5 md:p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col gap-6 animate-bounce-in">
                         <div class="text-center">
-                            <h3 class="text-xl font-bold mb-2 text-blue-400">Urutkan Waktu Salat</h3>
+                            <h3 class="text-xl font-bold mb-2 text-cyan-400">Urutkan Waktu Salat</h3>
                             <p class="text-sm text-gray-300 mb-2">Tarik dan geser blok di bawah ini ke urutan yang benar.</p>
                             <p class="text-xs text-yellow-400 italic">(Paling awal berada di paling atas)</p>
                         </div>
@@ -932,7 +932,7 @@
                                 </div>
                             `).join('')}
                         </div>
-                        <button onclick="App.checkSortResult()" class="btn-game bg-gradient-to-r from-blue-500 to-blue-600 py-4 rounded-xl font-bold shadow-lg w-full text-lg mt-2 border border-blue-400/30">
+                        <button onclick="App.checkSortResult()" class="btn-game bg-gradient-to-r from-cyan-500 to-blue-600 py-4 rounded-xl font-bold shadow-lg w-full text-lg mt-2 border border-cyan-400/30">
                             <i class="fas fa-check-circle mr-2"></i> Periksa Urutan
                         </button>
                     </div>
@@ -1017,11 +1017,11 @@
                 this.hideModal();
                 const allCards = document.querySelectorAll('.memory-card');
 
-                // Show face up for exactly 10 seconds
+                // Show face up for exactly 8 seconds
                 setTimeout(() => {
                     allCards.forEach(card => card.classList.remove('flipped'));
                     this.state.isBoardLocked = false;
-                }, 1000);
+                }, 8000);
             },
 
             flipCard(cardEl) {
@@ -1034,7 +1034,7 @@
 
                 if (this.state.flippedCards.length === 2) {
                     this.state.isBoardLocked = true;
-                    setTimeout(() => this.checkMemoryMatch(), 1000);
+                    setTimeout(() => this.checkMemoryMatch(), 800);
                 }
             },
 
@@ -1061,12 +1061,12 @@
                                 this.unflipCards(card1, card2);
                                 this.resetFlippedState(false);
                             });
-                        }, 1000);
+                        }, 500);
                     }
                 } else {
                     this.reduceLife();
                     this.unflipCards(card1, card2);
-                    setTimeout(() => this.resetFlippedState(false), 1000);
+                    setTimeout(() => this.resetFlippedState(false), 500);
                 }
             },
 
@@ -1320,7 +1320,7 @@
 
                 setTimeout(() => {
                     overlay.classList.add('hidden');
-                }, 2000);
+                }, 300);
             },
 
         };
