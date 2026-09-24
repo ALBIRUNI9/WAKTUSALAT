@@ -599,15 +599,15 @@
                 },
                 {
                     id: 6,
-                    title: "Level 6: Ujian Ekstrem Ahli Falak",
+                    title: "Level 6: Soal HOTS",
                     icon: "fas fa-fire",
                     color: "#EF4444",
                     type: "extreme-quiz",
                     hasMaterial: true,
                     starsThreshold: [1000, 1500, 2000],
                     material: [
-                        { title: "Ujian Kompetensi Ahli Falak", content: "Selamat datang di Level Ekstrem! Level ini menguji pemahaman mendalammu seputar astronomi bola, rumus hisab falak, instrumen, serta dalil penentuan waktu salat secara komprehensif." },
-                        { title: "Aturan Level Ekstrem", content: "Kamu akan menjawab 20 pertanyaan komprehensif tanpa pengurangan nyawa jika keliru. Cukup tampilkan jawaban yang benar!" }
+                        { title: "Ujian Kompetensi Ahli Falak", content: "Selamat datang di Level 6! Level ini menguji pemahaman mendalammu seputar waktu salat yang lebih mendalam." },
+                        { title: "Aturan Level 6", content: "Kamu akan menjawab 20 pertanyaan komprehensif tanpa pengurangan nyawa jika keliru. Cukup tampilkan jawaban yang benar!" }
                     ],
                     extremeQuestions: [
                         { q: "Yang dijadikan patokan Benda Langit Untuk Menentukan Waktu Shalat Adalah?", options: ["Bulan", "Matahari", "Mars", "Jupiter"], answer: 1 },
@@ -1100,7 +1100,7 @@
                             <span class="text-xs uppercase tracking-wider px-3 py-1 bg-red-900/60 rounded-full text-red-300 font-bold border border-red-500/30">
                                 Pertanyaan ${qIdx + 1} dari ${questions.length}
                             </span>
-                            <span class="text-xs text-yellow-400 font-bold">Level Ekstrem</span>
+                            <span class="text-xs text-yellow-400 font-bold">Level 6</span>
                         </div>
                         <h3 class="text-lg md:text-xl font-bold mb-6 text-white leading-snug">${qData.q}</h3>
                         <div class="flex flex-col gap-3" id="extreme-options">
@@ -1242,12 +1242,24 @@
                 });
             },
 
-            handleVictory() {
+            async handleVictory() {
                 document.getElementById('victory-score').innerText = this.state.totalScore;
                 document.getElementById('victory-correct').innerText = this.state.stats.correct;
                 document.getElementById('victory-wrong').innerText = this.state.stats.wrong;
 
-                // Do not auto-dismiss; keep visible with options to home or reset
+                const { error } = await supabaseClient
+                    .from('riwayat_game')
+                    .insert({
+                        nama: this.state.playerName,
+                        score: this.state.totalScore
+                    });
+
+                if (error) {
+                    console.error('Gagal menyimpan skor:', error.message);
+                } else {
+                    console.log('Skor berhasil disimpan!');
+                }
+
                 this.showModalElement('modal-victory');
             },
 
@@ -1315,14 +1327,33 @@
     </script>
 
     <!--supabase -->
-    <script src="cdn.jsdelivr.net/npm/@supabase/supabase-js@2.29.0/dist/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SUPABASE_URL = "https://sfloxichvqzqvxcundpp.supabase.co";
         const SUPABASE_KEY = "sb_publishable_RcULSopETvT9sT8_ECiy3g_OthTf8nx";
 
-        window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        console.log("Supabase berhasil dihubungkan!");} else { console.error("Supabase gagal dihubungkan!"); }
+        console.log("Supabase berhasil dihubungkan!");
+    </script>
+
+    <script>
+        async function simpanSkor(nama, score) {
+            const { error } = await supabaseClient
+                .from("riwayat_game")
+                .insert({
+                    nama: nama,
+                    score: score
+                });
+
+            if (error) {
+                console.error("Gagal menyimpan score:", error.message);
+                alert("Score gagal disimpan!");
+                return;
+            }
+
+            console.log("Score berhasil disimpan!");
+        }
     </script>
 
 </body>
