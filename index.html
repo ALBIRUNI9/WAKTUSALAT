@@ -19,7 +19,7 @@
                     fontFamily: { sans: ['Calibri', 'sans-serif'] },
                     colors: {
                         space: { 900: '#0B0B1A', 800: '#141432', 700: '#1D1D4A', 600: '#262662', 500: '#34347A' },
-                        accent: { subuh: '#38BDF8', zuhur: '#FDE047', asar: '#FB923C', magrib: '#F43F5E', isya: '#8B5CF6', extreme: '#EF4444' }
+                        accent: { subuh: '#ffffff', zuhur: '#ffffff', asar: '#ffffff', magrib: '#Ffffff', isya: '#ffffff', HOTS: '#EF4444' }
                     },
                     animation: {
                         'float': 'float 3s ease-in-out infinite',
@@ -200,8 +200,7 @@
     <div id="screen-map" class="screen relative items-center justify-center">
         <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-center glass-panel z-45 rounded-b-xl">
             <div class="flex items-center gap-3">
-                <div
-                    class="w-10 h-10 bg-blue-800 rounded-full flex items-center justify-center border border-blue-500">
+                <div class="w-10 h-10 bg-blue-800 rounded-xl flex items-center justify-center border border-blue-500">
                     <div id="map-player-name" class="text-white font-bold text-sm">Player</div>
                 </div>
                 <div>
@@ -220,27 +219,27 @@
         </div>
     </div>
 
-    <!-- SCREEN: MATERIAL -->
-    <div id="screen-material" class="screen items-center justify-center p-4">
+    <!-- SCREEN: MATERI -->
+    <div id="screen-materi" class="screen items-center justify-center p-4">
         <div
             class="glass-panel rounded-2xl w-full max-w-2xl h-[80vh] flex flex-col relative overflow-hidden shadow-2xl">
             <div class="p-4 border-b border-white/10 flex justify-between items-center bg-blue-800/80">
-                <h2 id="material-title" class="font-bold text-xl text-cyan-400"><i class="fas fa-book-open mr-2"></i>
-                    Log Pengamatan</h2>
+                <h2 id="materi-title" class="font-bold text-xl text-blue-400"><i class="fas fa-book-open mr-2"></i>
+                    MATERI</h2>
                 <button onclick="App.startCurrentLevelGame()" class="text-gray-400 hover:text-white"><i
                         class="fas fa-times text-xl"></i></button>
             </div>
 
-            <div class="flex-1 p-6 overflow-y-auto" id="material-content-area"></div>
+            <div class="flex-1 p-6 overflow-y-auto" id="materi-content-area"></div>
 
             <div class="p-4 border-t border-white/10 bg-blue-800/80 flex justify-between items-center">
-                <div class="flex gap-2" id="material-dots"></div>
+                <div class="flex gap-2" id="materi-dots"></div>
                 <div class="flex gap-2">
                     <button id="btn-prev-slide" onclick="App.prevSlide()"
                         class="btn-game px-4 py-2 bg-blue-600 rounded-lg hidden">Kembali</button>
                     <button id="btn-next-slide" onclick="App.nextSlide()"
                         class="btn-game px-6 py-2 bg-cyan-600 rounded-lg font-bold">Lanjut</button>
-                    <button id="btn-start-from-material" onclick="App.startCurrentLevelGame()"
+                    <button id="btn-start-from-materi" onclick="App.startCurrentLevelGame()"
                         class="btn-game px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg font-bold hidden shadow-lg shadow-green-500/30">Mulai
                         Game</button>
                 </div>
@@ -304,7 +303,7 @@
         <!-- Quiz Modal -->
         <div id="modal-quiz"
             class="hidden glass-panel border border-cyan-500/50 rounded-2xl p-6 max-w-md w-[95%] transform scale-90 transition-transform duration-300 relative overflow-hidden shadow-[0_0_30px_rgba(6,182,212,0.3)]">
-            <div class="absolute -top-10 -right-10 text-cyan-500/10 text-9xl"><i class="fas fa-question-circle"></i>
+            <div class="absolute -top-10 -right-10 text-blue-500/10 text-9xl"><i class="fas fa-question-circle"></i>
             </div>
 
             <div class="flex items-center gap-3 mb-4 relative z-10">
@@ -360,9 +359,7 @@
             <h2
                 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-2">
                 HARI AKHIR (VICTORY)</h2>
-            <p class="text-gray-300 mb-6 text-sm">Luar biasa! Kamu telah menguasai seluruh materi hingga Ujian
-                Ekstrem
-                Ahli Falak.</p>
+            <p class="text-gray-300 mb-6 text-sm">Selamat! Kamu telah menyelesaikan semua level.</p>
 
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <div class="bg-blue-800/80 rounded-xl p-4 border border-white/10">
@@ -478,7 +475,7 @@
                     icon: "fas fa-sort-numeric-down",
                     color: "#38BDF8",
                     type: "sort",
-                    hasMaterial: false,
+                    hasMateri: false,
                     starsThreshold: [300, 450, 550],
                     items: [
                         { id: 'subuh', label: 'Subuh', color: 'bg-space-subuh', order: 1 },
@@ -498,9 +495,9 @@
                     icon: "fas fa-sun",
                     color: "#FDE047",
                     type: "memory",
-                    hasMaterial: true,
+                    hasMateri: true,
                     starsThreshold: [500, 700, 900],
-                    material: [
+                    materi: [
                         { title: "Penentuan Waktu Klasik (Slide 1/2)", content: "Sebelum berkembangnya teknologi modern, waktu salat ditentukan berdasarkan pengamatan terhadap fenomena alam, terutama posisi matahari dan perubahan cahaya di langit." },
                         { title: "Tanda Fenomena Alam (Slide 2/2)", content: "<ul class='list-disc pl-5 space-y-2 text-sm text-gray-300'><li><b>Subuh:</b> Munculnya fajar shadiq hingga terbitnya matahari.</li><li><b>Zuhur:</b> Sejak matahari tergelincir, sesaat setelah titik kulminasi, hingga masuk asar.</li><li><b>Asar:</b> Berdasarkan posisi dan panjang bayangan benda (dua kali bayangan).</li><li><b>Magrib:</b> Sejak matahari terbenam hingga tibanya waktu isya.</li><li><b>Isya:</b> Sejak hilangnya mega merah sampai separuh malam / fajar kadzib.</li></ul>" }
                     ],
@@ -525,9 +522,9 @@
                     icon: "fas fa-compass",
                     color: "#10B981",
                     type: "memory",
-                    hasMaterial: true,
+                    hasMateri: true,
                     starsThreshold: [500, 750, 950],
-                    material: [
+                    materi: [
                         { title: "Perkembangan Alat Falak", content: "Seiring perkembangan ilmu falak, penentuan waktu salat berkembang dari pengamatan langsung terhadap Matahari hingga penggunaan teknologi digital." },
                         { title: "Daftar Instrumen", content: "<ul class='list-disc pl-5 space-y-1 text-sm text-gray-300'><li><b>Jam Bancet/Istiwa:</b> Menentukan waktu berdasar arah & panjang bayangan.</li><li><b>Rubu' Mujayyab:</b> Mengukur ketinggian matahari & hitung waktu.</li><li><b>Astrolab:</b> Mengukur posisi/ketinggian benda langit.</li><li><b>Teodolit:</b> Alat optik presisi ukur sudut & posisi matahari.</li><li><b>Software Digital:</b> Olah data astronomis instan.</li></ul>" }
                     ],
@@ -552,9 +549,9 @@
                     icon: "fas fa-globe",
                     color: "#8B5CF6",
                     type: "memory",
-                    hasMaterial: true,
+                    hasMateri: true,
                     starsThreshold: [600, 850, 1100],
-                    material: [
+                    materi: [
                         { title: "Faktor Geografis & Astronomis", content: "Perbedaan waktu salat antarwilayah dipengaruhi oleh perbedaan lokasi geografis dan posisi Matahari." },
                         { title: "Variabel Pengaruh", content: "<ul class='list-disc pl-4 space-y-1 text-xs text-gray-300'><li><b>Lintang tempat:</b> memengaruhi posisi & lama matahari di atas ufuk.</li><li><b>Bujur tempat:</b> menyebabkan perbedaan waktu lokal antarwilayah.</li><li><b>Deklinasi Matahari:</b> posisi matahari yang berubah sepanjang tahun.</li><li><b>Equation of Time:</b> memengaruhi selisih waktu matahari dan jam.</li><li><b>Ketinggian tempat:</b> memengaruhi kerendahan ufuk & terbit/terbenam.</li><li><b>Tinggi Matahari (h₀):</b> acuan untuk menentukan awal waktu salat.</li></ul>" }
                     ],
@@ -581,9 +578,9 @@
                     icon: "fas fa-drafting-compass",
                     color: "#EC4899",
                     type: "memory",
-                    hasMaterial: true,
+                    hasMateri: true,
                     starsThreshold: [500, 750, 1000],
-                    material: [
+                    materi: [
                         { title: "Derajat Matahari (h)", content: "Dalam ilmu hisab, masuknya waktu salat diterjemahkan ke dalam angka derajat ketinggian matahari dari ufuk." },
                         { title: "Rincian Derajat", content: "<ul class='list-disc pl-5 space-y-2 text-sm text-gray-300'><li><b>Subuh:</b> -20° di bawah ufuk.</li><li><b>Zuhur:</b> Saat zawal / tergelincir dari kulminasi.</li><li><b>Asar:</b> Berdasarkan panjang bayangan benda.</li><li><b>Magrib:</b> Sekitar -1° di bawah ufuk.</li><li><b>Isya:</b> -18° di bawah ufuk.</li></ul>" }
                     ],
@@ -607,14 +604,14 @@
                     title: "Level 6: Soal HOTS",
                     icon: "fas fa-fire",
                     color: "#EF4444",
-                    type: "extreme-quiz",
-                    hasMaterial: true,
+                    type: "HOTS-quiz",
+                    hasMateri: true,
                     starsThreshold: [1000, 1500, 2000],
-                    material: [
-                        { title: "Ujian Kompetensi Ahli Falak", content: "Selamat datang di Level 6! Level ini menguji pemahaman mendalammu seputar waktu salat yang lebih mendalam." },
-                        { title: "Aturan Level 6", content: "Kamu akan menjawab 20 pertanyaan komprehensif tanpa pengurangan nyawa jika keliru. Cukup tampilkan jawaban yang benar!" }
+                    materi: [
+                        { title: "SOAL HOTS", content: "Selamat datang di Level 6! Level ini menguji pemahaman seputar waktu salat yang lebih mendalam." },
+                        { title: "Aturan Level 6", content: "Kamu akan menjawab 20 pertanyaan tanpa pengurangan nyawa jika keliru!" }
                     ],
-                    extremeQuestions: [
+                    HOTSQuestions: [
                         { q: "Yang dijadikan patokan Benda Langit Untuk Menentukan Waktu Shalat Adalah?", options: ["Bulan", "Matahari", "Mars", "Jupiter"], answer: 1 },
                         { q: "Berapa Sudut Ketika Matahari Berkulminasi?", options: ["0 derajat", "45 derajat", "90 derajat", "60 derajat"], answer: 0 },
                         { q: "Dalam Berbagai Kitab Turats Di katakan Bahwa Di Mulainya Waktu Dzuhur Ketika?", options: ["Matahari Terbenam", "Matahari Menguning", "Matahari Tergelincir", "Matahari Terbit"], answer: 2 },
@@ -661,7 +658,7 @@
                 currentQuestionsPool: [],
 
                 currentSlideIndex: 0,
-                extremeQuestionIndex: 0
+                HOTSQuestionIndex: 0
             },
 
             saveData() {
@@ -671,12 +668,12 @@
                     totalScore: this.state.totalScore,
                     stats: this.state.stats
                 };
-                localStorage.setItem('astroFalakSave', JSON.stringify(dataToSave));
+                localStorage.setItem('ALBIRUNISave', JSON.stringify(dataToSave));
             },
 
             loadData() {
                 try {
-                    const saved = localStorage.getItem('astroFalakSave');
+                    const saved = localStorage.getItem('ALBIRUNISave');
                     if (saved) {
                         const parsed = JSON.parse(saved);
                         this.state.playerName = parsed.playerName || '';
@@ -693,7 +690,7 @@
 
             resetDataConfirm() {
                 this.showModal('Peringatan', 'Yakin ingin mereset semua data permainan?', 'fa-exclamation-triangle', () => {
-                    localStorage.removeItem('astroFalakSave');
+                    localStorage.removeItem('ALBIRUNISave');
                     location.reload();
                 }, true);
             },
@@ -763,24 +760,24 @@
                 this.state.currentLevelId = levelId;
                 const level = GameData.levels.find(l => l.id === levelId);
 
-                if (level.hasMaterial) {
-                    this.showMaterialScreen(level);
+                if (level.hasMateri) {
+                    this.showMateriScreen(level);
                 } else {
                     this.startCurrentLevelGame();
                 }
             },
 
-            showMaterialScreen(level) {
+            showMateriScreen(level) {
                 this.state.currentSlideIndex = 0;
-                document.getElementById('material-title').innerHTML = `<i class="${level.icon} mr-2"></i> Log Materi Level ${level.id}`;
-                this.renderMaterialSlide(level);
-                this.showScreen('material');
+                document.getElementById('materi-title').innerHTML = `<i class="${level.icon} mr-2"></i> Log Materi Level ${level.id}`;
+                this.renderMateriSlide(level);
+                this.showScreen('materi');
             },
 
-            renderMaterialSlide(level) {
-                const area = document.getElementById('material-content-area');
-                const dots = document.getElementById('material-dots');
-                const slide = level.material[this.state.currentSlideIndex];
+            renderMateriSlide(level) {
+                const area = document.getElementById('materi-content-area');
+                const dots = document.getElementById('materi-dots');
+                const slide = level.materi[this.state.currentSlideIndex];
 
                 area.innerHTML = `
                     <div class="animate-bounce-in">
@@ -791,21 +788,21 @@
                     </div>
                 `;
 
-                dots.innerHTML = level.material.map((_, i) =>
+                dots.innerHTML = level.materi.map((_, i) =>
                     `<div class="w-2.5 h-2.5 rounded-full ${i === this.state.currentSlideIndex ? 'bg-cyan-400' : 'bg-gray-600'} transition-colors"></div>`
                 ).join('');
 
-                const isLast = this.state.currentSlideIndex === level.material.length - 1;
+                const isLast = this.state.currentSlideIndex === level.materi.length - 1;
                 document.getElementById('btn-prev-slide').style.display = this.state.currentSlideIndex > 0 ? 'block' : 'none';
                 document.getElementById('btn-next-slide').style.display = isLast ? 'none' : 'block';
-                document.getElementById('btn-start-from-material').style.display = isLast ? 'block' : 'none';
+                document.getElementById('btn-start-from-materi').style.display = isLast ? 'block' : 'none';
             },
 
             nextSlide() {
                 const level = GameData.levels.find(l => l.id === this.state.currentLevelId);
-                if (this.state.currentSlideIndex < level.material.length - 1) {
+                if (this.state.currentSlideIndex < level.materi.length - 1) {
                     this.state.currentSlideIndex++;
-                    this.renderMaterialSlide(level);
+                    this.renderMateriSlide(level);
                 }
             },
 
@@ -813,7 +810,7 @@
                 if (this.state.currentSlideIndex > 0) {
                     this.state.currentSlideIndex--;
                     const level = GameData.levels.find(l => l.id === this.state.currentLevelId);
-                    this.renderMaterialSlide(level);
+                    this.renderMateriSlide(level);
                 }
             },
 
@@ -827,9 +824,9 @@
                 this.state.combo = 0;
                 this.state.levelStartTime = Date.now();
 
-                if (level.type === 'extreme-quiz') {
-                    this.state.extremeQuestionIndex = 0;
-                    this.state.currentQuestionsPool = [...level.extremeQuestions];
+                if (level.type === 'HOTS-quiz') {
+                    this.state.HOTSQuestionIndex = 0;
+                    this.state.currentQuestionsPool = [...level.HOTSQuestions];
                 } else if (level.questions) {
                     this.state.currentQuestionsPool = [...level.questions].sort(() => 0.5 - Math.random());
                 }
@@ -846,8 +843,8 @@
                     this.initSortGame(level, board);
                 } else if (level.type === 'memory') {
                     this.initMemoryGame(level, board);
-                } else if (level.type === 'extreme-quiz') {
-                    this.initExtremeQuiz(board);
+                } else if (level.type === 'HOTS-quiz') {
+                    this.initHOTSQuiz(board);
                 }
             },
 
@@ -858,7 +855,7 @@
                 livesContainer.innerHTML = '';
                 const level = GameData.levels.find(l => l.id === this.state.currentLevelId);
 
-                if (level.type === 'extreme-quiz') {
+                if (level.type === 'HOTS-quiz') {
                     livesContainer.innerHTML = `<span class="text-xs text-red-400 font-bold bg-red-950/50 px-3 py-1 rounded-full border border-red-500/30"><i class="fas fa-shield-alt mr-1"></i> Mode Kebal Kesalahan</span>`;
                     return;
                 }
@@ -897,7 +894,7 @@
                     scoreEl.style.transform = 'scale(1)';
                     scoreEl.style.color = 'white';
                     this.updateHUD();
-                }, 300);
+                }, 1000);
             },
 
             reduceLife() {
@@ -909,7 +906,7 @@
                     this.handleGameOver();
                 } else {
                     document.getElementById('screen-game').classList.add('animate-shake');
-                    setTimeout(() => document.getElementById('screen-game').classList.remove('animate-shake'), 500);
+                    setTimeout(() => document.getElementById('screen-game').classList.remove('animate-shake'), 1000);
                 }
             },
 
@@ -922,7 +919,7 @@
                 board.innerHTML = `
                     <div class="w-full max-w-md bg-space-800/80 p-5 md:p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col gap-6 animate-bounce-in">
                         <div class="text-center">
-                            <h3 class="text-xl font-bold mb-2 text-cyan-400">Urutkan Waktu Salat</h3>
+                            <h3 class="text-xl font-bold mb-2 text-blue-400">Urutkan Waktu Salat</h3>
                             <p class="text-sm text-gray-300 mb-2">Tarik dan geser blok di bawah ini ke urutan yang benar.</p>
                             <p class="text-xs text-yellow-400 italic">(Paling awal berada di paling atas)</p>
                         </div>
@@ -935,7 +932,7 @@
                                 </div>
                             `).join('')}
                         </div>
-                        <button onclick="App.checkSortResult()" class="btn-game bg-gradient-to-r from-cyan-500 to-blue-600 py-4 rounded-xl font-bold shadow-lg w-full text-lg mt-2 border border-cyan-400/30">
+                        <button onclick="App.checkSortResult()" class="btn-game bg-gradient-to-r from-blue-500 to-blue-600 py-4 rounded-xl font-bold shadow-lg w-full text-lg mt-2 border border-blue-400/30">
                             <i class="fas fa-check-circle mr-2"></i> Periksa Urutan
                         </button>
                     </div>
@@ -1020,11 +1017,11 @@
                 this.hideModal();
                 const allCards = document.querySelectorAll('.memory-card');
 
-                // Show face up for exactly 8 seconds
+                // Show face up for exactly 10 seconds
                 setTimeout(() => {
                     allCards.forEach(card => card.classList.remove('flipped'));
                     this.state.isBoardLocked = false;
-                }, 8000);
+                }, 1000);
             },
 
             flipCard(cardEl) {
@@ -1037,7 +1034,7 @@
 
                 if (this.state.flippedCards.length === 2) {
                     this.state.isBoardLocked = true;
-                    setTimeout(() => this.checkMemoryMatch(), 800);
+                    setTimeout(() => this.checkMemoryMatch(), 1000);
                 }
             },
 
@@ -1064,12 +1061,12 @@
                                 this.unflipCards(card1, card2);
                                 this.resetFlippedState(false);
                             });
-                        }, 500);
+                        }, 1000);
                     }
                 } else {
                     this.reduceLife();
                     this.unflipCards(card1, card2);
-                    setTimeout(() => this.resetFlippedState(false), 500);
+                    setTimeout(() => this.resetFlippedState(false), 1000);
                 }
             },
 
@@ -1083,13 +1080,13 @@
                 this.state.isBoardLocked = false;
             },
 
-            initExtremeQuiz(board) {
-                this.renderExtremeQuestion(board);
+            initHOTSQuiz(board) {
+                this.renderHOTSQuestion(board);
             },
 
-            renderExtremeQuestion(board) {
-                const questions = GameData.levels.find(l => l.id === 6).extremeQuestions;
-                const qIdx = this.state.extremeQuestionIndex;
+            renderHOTSQuestion(board) {
+                const questions = GameData.levels.find(l => l.id === 6).HOTSQuestions;
+                const qIdx = this.state.HOTSQuestionIndex;
 
                 if (qIdx >= questions.length) {
                     this.handleLevelComplete();
@@ -1108,9 +1105,9 @@
                             <span class="text-xs text-yellow-400 font-bold">Level 6</span>
                         </div>
                         <h3 class="text-lg md:text-xl font-bold mb-6 text-white leading-snug">${qData.q}</h3>
-                        <div class="flex flex-col gap-3" id="extreme-options">
+                        <div class="flex flex-col gap-3" id="HOTS-options">
                             ${qData.options.map((opt, i) => `
-                                <button onclick="App.answerExtreme(${i}, ${qData.answer})" class="btn-game w-full text-left bg-space-800/90 hover:bg-red-950/40 border border-white/10 rounded-xl p-4 transition-colors font-medium flex items-center gap-3 group">
+                                <button onclick="App.answerHOTS(${i}, ${qData.answer})" class="btn-game w-full text-left bg-space-800/90 hover:bg-red-950/40 border border-white/10 rounded-xl p-4 transition-colors font-medium flex items-center gap-3 group">
                                     <span class="w-8 h-8 rounded-lg bg-space-700 group-hover:bg-red-600 flex items-center justify-center font-bold text-sm text-white transition-colors">${optionLetters[i]}</span>
                                     <span class="flex-1">${opt}</span>
                                 </button>
@@ -1120,8 +1117,8 @@
                 `;
             },
 
-            answerExtreme(selectedIdx, correctIdx) {
-                const optionsContainer = document.getElementById('extreme-options');
+            answerHOTS(selectedIdx, correctIdx) {
+                const optionsContainer = document.getElementById('HOTS-options');
                 const buttons = optionsContainer.querySelectorAll('button');
 
                 buttons.forEach(b => b.disabled = true);
@@ -1132,17 +1129,17 @@
                     buttons[selectedIdx].classList.add('bg-green-600/80', 'border-green-400');
                     this.addScore(150);
                     setTimeout(() => {
-                        this.state.extremeQuestionIndex++;
-                        this.renderExtremeQuestion(document.getElementById('game-board-container'));
+                        this.state.HOTSQuestionIndex++;
+                        this.renderHOTSQuestion(document.getElementById('game-board-container'));
                     }, 1000);
                 } else {
                     buttons[selectedIdx].classList.add('bg-red-600/80', 'border-red-400');
                     buttons[correctIdx].classList.add('bg-green-600/60', 'border-green-400', 'animate-pulse');
 
-                    this.showModal('Kunci Jawaban', `Jawaban yang benar adalah: ${optionLetters[correctIdx]}. ${GameData.levels.find(l => l.id === 6).extremeQuestions[this.state.extremeQuestionIndex].options[correctIdx]}`, 'fas fa-info-circle', () => {
+                    this.showModal('Kunci Jawaban', `Jawaban yang benar adalah: ${optionLetters[correctIdx]}. ${GameData.levels.find(l => l.id === 6).HOTSQuestions[this.state.HOTSQuestionIndex].options[correctIdx]}`, 'fas fa-info-circle', () => {
                         this.hideModal();
-                        this.state.extremeQuestionIndex++;
-                        this.renderExtremeQuestion(document.getElementById('game-board-container'));
+                        this.state.HOTSQuestionIndex++;
+                        this.renderHOTSQuestion(document.getElementById('game-board-container'));
                     });
                 }
             },
@@ -1323,7 +1320,7 @@
 
                 setTimeout(() => {
                     overlay.classList.add('hidden');
-                }, 300);
+                }, 2000);
             },
 
         };
