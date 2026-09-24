@@ -1313,6 +1313,18 @@
 
         window.onload = () => App.init();
     </script>
+
+    <!--supabase -->
+    <script src="cdn.jsdelivr.net/npm/@supabase/supabase-js@2.29.0/dist/supabase.min.js"></script>
+    <script>
+        const SUPABASE_URL = "https://sfloxichvqzqvxcundpp.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_RcULSopETvT9sT8_ECiy3g_OthTf8nx";
+
+        window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        console.log("Supabase berhasil dihubungkan!"); else { console.log("Supabase gagal dihubungkan!"); }
+    </script>
+
 </body>
 
 </html>
