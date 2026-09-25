@@ -1,207 +1,170 @@
 <!DOCTYPE html>
 <html lang="id">
 
-<style>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>ALBIRUNI - BELAJAR WAKTU SALAT</title><script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Calibri:wght@400;600;700;800;900&display=swap"
+<>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ALBIRUNI - BELAJAR WAKTU SALAT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Calibri:wght@400;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SortableJS untuk Drag & Drop Level 1 -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
-    rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">< !-- SortableJS untuk Drag & Drop Level 1 --><script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script><script>tailwind.config= {
-        theme: {
-            extend: {
-                fontFamily: {
-                    sans: ['Calibri', 'sans-serif']
-                }
-
-                ,
-                colors: {
-                    space: {
-                        900: '#0B0B1A', 800: '#141432', 700: '#1D1D4A', 600: '#262662', 500: '#34347A'
-                    }
-
-                    ,
-                    accent: {
-                        subuh: '#38BDF8', zuhur: '#FDE047', asar: '#FB923C', magrib: '#F43F5E', isya: '#8B5CF6', HOTS: '#EF4444'
-                    }
-                }
-
-                ,
-                animation: {
-                    'float': 'float 3s ease-in-out infinite',
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Calibri', 'sans-serif'] },
+                    colors: {
+                        space: { 900: '#0B0B1A', 800: '#141432', 700: '#1D1D4A', 600: '#262662', 500: '#34347A' },
+                        accent: { subuh: '#38BDF8', zuhur: '#FDE047', asar: '#FB923C', magrib: '#F43F5E', isya: '#8B5CF6', HOTS: '#EF4444' }
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'bounce-in': 'bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
                         'shake': 'shake 0.4s ease-in-out',
-                }
-
-                ,
-                keyframes: {
-                    float: {
-                        '0%, 100%': {
-                            transform: 'translateY(0)'
-                        }
-
-                        ,
-                        '50%': {
-                            transform: 'translateY(-10px)'
-                        }
-                    }
-
-                    ,
-                    bounceIn: {
-                        '0%': {
-                            transform: 'scale(0.5)', opacity: 0
-                        }
-
-                        ,
-                        '100%': {
-                            transform: 'scale(1)', opacity: 1
-                        }
-                    }
-
-                    ,
-                    shake: {
-                        '0%, 100%': {
-                            transform: 'translateX(0)'
-                        }
-
-                        ,
-                        '25%': {
-                            transform: 'translateX(-5px)'
-                        }
-
-                        ,
-                        '75%': {
-                            transform: 'translateX(5px)'
-                        }
+                    },
+                    keyframes: {
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+                        bounceIn: { '0%': { transform: 'scale(0.5)', opacity: 0 }, '100%': { transform: 'scale(1)', opacity: 1 } },
+                        shake: { '0%, 100%': { transform: 'translateX(0)' }, '25%': { transform: 'translateX(-5px)' }, '75%': { transform: 'translateX(5px)' } }
                     }
                 }
             }
         }
-    }
-
-    </script><style>body {
-        background-image: url('langit.jpg');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }
-
-    .glass-panel {
-        background: rgba(246, 244, 244);
-    }
-
-    .screen {
-        display: none;
-        width: 100%;
-        height: 100%;
-        overflow-y: auto;
-        overflow-x: hidden;
-        position: absolute;
-        top: 0;
-        left: 0;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .screen.active {
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* Memory Card 3D Flip Styles */
-    .perspective-1000 {
-        perspective: 1000px;
-    }
-
-    .transform-style-3d {
-        transform-style: preserve-3d;
-        transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
-    }
-
-    .backface-hidden {
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
-    }
-
-    .rotate-y-180 {
-        transform: rotateY(180deg);
-    }
-
-    .memory-card {
-        cursor: pointer;
-    }
-
-    .memory-card.flipped {
-        cursor: default;
-    }
-
-    .memory-card.flipped .memory-card-inner {
-        transform: rotateY(180deg);
-    }
-
-    .memory-card.matched .rotate-y-180 {
-        animation: pulse-glow 1s ease-in-out infinite alternate;
-        border-color: #4ADE80;
-        box-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
-    }
-
-    @keyframes pulse-glow {
-        from {
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+    </script>
+    
+    <style>
+        body {
+            background-image: url('langit.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
 
-        to {
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+        .glass-panel {
+            background: rgba(246, 244, 244);
         }
-    }
 
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            -webkit-overflow-scrolling: touch;
+        }
 
-    ::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 4px;
-    }
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
 
-    ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 4px;
-    }
+        /* Memory Card 3D Flip Styles */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
 
-    ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.5);
-    }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
 
-    .level-node {
-        z-index: 10;
-        position: relative;
-        transition: transform 0.2s;
-    }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
 
-    .level-node:active {
-        transform: scale(0.95);
-    }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
 
-    .btn-game {
-        transition: all 0.2s;
-    }
+        .memory-card {
+            cursor: pointer;
+        }
 
-    .btn-game:active {
-        transform: scale(0.95) translateY(2px);
-    }
+        .memory-card.flipped {
+            cursor: default;
+        }
 
-    .hide-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
+        .memory-card.flipped .memory-card-inner {
+            transform: rotateY(180deg);
+        }
 
-    .hide-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
+        .memory-card.matched .rotate-y-180 {
+            animation: pulse-glow 1s ease-in-out infinite alternate;
+            border-color: #4ADE80;
+            box-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
+        }
 
-    .materi-content-area {
-        color: #27257b !important;
-    }
-</style>
+        @keyframes pulse-glow {
+            from {
+                box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+            }
+
+            to {
+                box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .level-node {
+            z-index: 10;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .level-node:active {
+            transform: scale(0.95);
+        }
+
+        .btn-game {
+            transition: all 0.2s;
+        }
+
+        .btn-game:active {
+            transform: scale(0.95) translateY(2px);
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Memaksa semua teks di dalam area materi menjadi putih/terang */
+         .materi-content-area {
+         color: #27257b !important;
+         }
+
+    </style>
 </head>
 
 <body class="font-sans antialiased text-gray-100">
