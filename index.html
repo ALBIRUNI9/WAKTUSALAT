@@ -158,12 +158,14 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+    </style>
 
-        /* Memaksa semua teks di dalam area materi menjadi putih/terang */
-         .materi-content-area {
-         color: #27257b !important;
-         }
-
+    <style>
+            /* Memaksa semua teks dan elemen di dalam materi-content-area berubah warna */
+             .materi-content-area, 
+            .materi-content-area * {
+            color: #ffffff !important; /* Ganti #ffffff dengan warna yang diinginkan, misal kuning: #0b0b1a */
+  }
     </style>
 </head>
 
@@ -237,7 +239,7 @@
                         class="fas fa-times text-xl"></i></button>
             </div>
 
-            <div class="flex-1 p-6 text-blue" id="materi-content-area"></div>
+            <div class="flex-1 p-6 text-blue materi-content-area" id="materi-content-area"></div>
 
             <div class="p-4 border-t border-white/10 bg-blue-800/80 flex justify-between items-center">
                 <div class="flex gap-2" id="materi-dots"></div>
